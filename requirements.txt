@@ -1,0 +1,15 @@
+# --- API / app (always needed) ---
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+
+# --- GCP / agents (Cloud Run deployment) ---
+google-cloud-aiplatform>=1.60     # Vertex AI (Gemini, embeddings)
+google-adk>=0.2                   # Agent Development Kit (Track 1)
+mcp>=1.2                          # Model Context Protocol server (Track 2)
+psycopg2-binary>=2.9              # AlloyDB / pgvector (Track 3 RAG)
+
+# --- NVIDIA acceleration benchmark (run in a RAPIDS/GPU env) ---
+pandas>=2.1
+numpy>=1.26
+# cudf-cu12 / cuml-cu12 come from the RAPIDS image; see accel/README.md

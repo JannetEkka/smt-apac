@@ -1,0 +1,28 @@
+# OPTIONAL stretch: an NVIDIA L4 GPU Cloud Run service for serving an open model
+# (e.g. Gemma) as the explainer fallback — satisfies "NVIDIA GPUs on Google Cloud".
+# Deploy (gcloud, simplest):
+#
+#   gcloud run deploy smt-world-gpu \
+#     --image=us-docker.pkg.dev/$PROJECT/smt/smt-world-gpu:latest \
+#     --region=us-central1 --allow-unauthenticated \
+#     --gpu=1 --gpu-type=nvidia-l4 \
+#     --cpu=8 --memory=32Gi --max-instances=1 --no-cpu-throttling
+#
+# L4 = 24GB VRAM, GA on Cloud Run, no quota request. Fits Gemma 2 (9B) class models.
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: smt-world-gpu
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/gpu-type: nvidia-l4
+    spec:
+      containers:
+        - image: us-docker.pkg.dev/PROJECT/smt/smt-world-gpu:latest
+          resources:
+            limits:
+              cpu: "8"
+              memory: 32Gi
+              nvidia.com/gpu: "1"

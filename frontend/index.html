@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SMT World — see the why</title>
+  <link rel="stylesheet" href="styles.css" />
+  <!-- three.js for the 3D "SMT World" brain (import map → world.js uses bare 'three') -->
+  <script type="importmap">
+  { "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  } }
+  </script>
+</head>
+<body>
+  <!-- Layout is a hand-cleaned version of a Google Stitch export (HTML + utility classes). -->
+  <header class="topbar">
+    <div class="brand">◎ SMT World</div>
+    <div class="tag">Explainable decision-intelligence · <span id="brainSource">demo</span> data</div>
+  </header>
+
+  <main>
+    <section id="world" class="world"><canvas id="brainCanvas"></canvas>
+      <div class="hint">Click a pair to see <b>why</b>. Drag to orbit.</div>
+    </section>
+
+    <aside class="panel">
+      <div id="decisionCard" class="card">
+        <div class="muted">Pick a pair in the world →</div>
+      </div>
+
+      <div class="card">
+        <h3>New here? Start the ladder</h3>
+        <div class="ladder">
+          <button data-level="smt">What is SMT?</button>
+          <button data-level="trading">Trading 101</button>
+          <button data-level="crypto">Crypto 101</button>
+        </div>
+        <div id="lesson" class="lesson muted">Tap a rung to learn — no crypto knowledge needed.</div>
+      </div>
+
+      <div class="card">
+        <h3>Chat with SMT</h3>
+        <div id="chatlog" class="chatlog"></div>
+        <form id="chatForm" class="chatrow">
+          <input id="chatInput" placeholder="Ask me anything — like 'what is a long?'" autocomplete="off"/>
+          <button type="submit">Ask</button>
+        </form>
+      </div>
+
+      <div class="card copytrade">
+        <h3>Copy-trade SMT <span class="badge">simulated</span></h3>
+        <p class="muted">Mirror SMT's calls in a paper portfolio. Live execution via our launch
+          partner <b>WEEX</b> is coming — join the waitlist.</p>
+        <form id="waitlist" class="chatrow">
+          <input id="email" type="email" placeholder="you@email.com" />
+          <button type="submit">Join waitlist</button>
+        </form>
+        <div id="waitlistMsg" class="muted"></div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="foot">
+    The alpha (signal params, per-pair research, live PnL) is withheld for IP reasons — what you
+    see is SMT's explainability + education surface. Built for the Google Gen AI Academy APAC,
+    Cohort 2. <a href="https://github.com/JannetEkka/smt-apac">Source</a>.
+  </footer>
+
+  <script type="module" src="world.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

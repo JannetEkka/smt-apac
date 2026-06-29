@@ -1,0 +1,8 @@
+[project]
+name = "smt-world"
+version = "0.1.0"
+description = "SMT World — explainable decision-intelligence companion (GCP APAC Cohort 2)"
+requires-python = ">=3.10"
+
+[tool.setuptools]
+packages = ["brain", "api", "agents", "agents.rag"]
