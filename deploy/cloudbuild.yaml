@@ -3,22 +3,23 @@
 substitutions:
   _REGION: us-central1
   _SERVICE: smt-world
+  _TAG: latest
 steps:
   - name: gcr.io/cloud-builders/docker
-    args: ["build", "-f", "api/Dockerfile", "-t", "${_REGION}-docker.pkg.dev/$PROJECT_ID/smt/smt-world:$SHORT_SHA", "."]
+    args: ["build", "-f", "api/Dockerfile", "-t", "${_REGION}-docker.pkg.dev/$PROJECT_ID/smt/smt-world:${_TAG}", "."]
   - name: gcr.io/cloud-builders/docker
-    args: ["push", "${_REGION}-docker.pkg.dev/$PROJECT_ID/smt/smt-world:$SHORT_SHA"]
+    args: ["push", "${_REGION}-docker.pkg.dev/$PROJECT_ID/smt/smt-world:${_TAG}"]
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: gcloud
     args:
       - run
       - deploy
       - ${_SERVICE}
-      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/smt/smt-world:$SHORT_SHA
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/smt/smt-world:${_TAG}
       - --region=${_REGION}
       - --allow-unauthenticated
       - --cpu=2
       - --memory=1Gi
       - --set-env-vars=GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=${_REGION}
 images:
-  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/smt/smt-world:$SHORT_SHA
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/smt/smt-world:${_TAG}
