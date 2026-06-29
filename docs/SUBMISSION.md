@@ -6,7 +6,7 @@ Region used throughout: `us-central1`.
 ## The five required fields
 | Field | Value |
 |---|---|
-| **Project Deployment Link** (Cloud Run) | **`https://smt-world-2gbcoyhuea-uc.a.run.app`** (deployed 2026-06-29; pending public-invoker IAM) |
+| **Project Deployment Link** (Cloud Run) | **`https://smt-world-2gbcoyhuea-uc.a.run.app`** ✅ live & public (2026-06-29) |
 | **Project PPT** | Fill `cohort 2 hack/Template_Prototype_Submission_Deck…pptx` from `docs/DECK_OUTLINE.md` → export PDF (≤5 MB) |
 | **GitHub Repository Link** | `https://github.com/JannetEkka/smt-apac` |
 | **Demo Video Link** (≤3 min) | *record from `docs/DEMO_SCRIPT.md`, then paste* |
@@ -59,16 +59,17 @@ gcloud artifacts repositories create smt --repository-format=docker --location=u
   --description="SMT World images"
 ```
 
-## Step 1 — deploy to Cloud Run, capture the URL
-> **DONE 2026-06-29** — built + deployed `smt-world` in `us-central1`. URL:
-> `https://smt-world-2gbcoyhuea-uc.a.run.app`. The build's `--allow-unauthenticated` IAM set
-> failed (deploy SA lacked permission); grant the public invoker directly as project owner:
-> ```bash
-> gcloud run services add-iam-policy-binding smt-world --region=us-central1 \
->   --member=allUsers --role=roles/run.invoker
-> ```
-> (Until then the service returns a Google 404 to anonymous requests — that's Cloud Run hiding a
-> private service, not a routing bug.)
+## Step 1 — deploy to Cloud Run, capture the URL ✅ DONE 2026-06-29
+> Built + deployed `smt-world` in `us-central1`, public via `allUsers` run.invoker.
+> **URL: `https://smt-world-2gbcoyhuea-uc.a.run.app`** — `/decision/{pair}`, `/world`, and the 3D
+> front-end all serve. (Note: the build's `--allow-unauthenticated` IAM set failed because the
+> deploy SA lacked permission; granted directly with
+> `gcloud run services add-iam-policy-binding smt-world --region=us-central1 --member=allUsers --role=roles/run.invoker`.)
+>
+> **Why Cloud Run and not the Cloudflare Worker** (`*.workers.dev`): the submission field is
+> literally "Cloud Run Deployment Link", the rubric scores GCP service usage (Cloudflare = 0
+> rubric points), and Workers can't host the Python FastAPI backend / Vertex+ADK agents / AlloyDB
+> RAG / BigQuery. The Worker only serves a static frontend shell; Cloud Run serves the whole app.
 
 - [x] **Deploy**
 ```bash
