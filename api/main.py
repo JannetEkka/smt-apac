@@ -16,12 +16,12 @@ from __future__ import annotations
 import os
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from brain import adapter
+from brain import adapter, bq_log
 
 app = FastAPI(title="SMT World", version="0.1.0",
               description="Explainable decision-intelligence companion — GCP APAC Cohort 2")
@@ -42,16 +42,22 @@ def healthz():
 
 
 @app.get("/world")
-def world():
+def world(background_tasks: BackgroundTasks):
     """All 8 pairs — what the 3D 'SMT World' renders. Source = demo (public) or live (private)."""
-    return adapter.world()
+    snap = adapter.world()
+    # Land sanitized activity into BigQuery (best-effort, off the request path).
+    background_tasks.add_task(bq_log.log_world, snap)
+    return snap
 
 
 @app.get("/decision/{pair}")
-def decision(pair: str):
+def decision(pair: str, background_tasks: BackgroundTasks):
     if pair.upper() not in adapter.PAIRS:
         raise HTTPException(404, f"unknown pair '{pair}'. known: {adapter.PAIRS}")
-    return adapter.decision(pair)
+    d = adapter.decision(pair)
+    # Land sanitized activity into BigQuery (best-effort, off the request path).
+    background_tasks.add_task(bq_log.log_decision, d, adapter.SOURCE)
+    return d
 
 
 @app.get("/education/{level}")
