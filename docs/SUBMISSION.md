@@ -6,7 +6,7 @@ Region used throughout: `us-central1`.
 ## The five required fields
 | Field | Value |
 |---|---|
-| **Project Deployment Link** (Cloud Run) | `https://smt-world-<hash>-uc.a.run.app` — *fill after step 1 deploy* |
+| **Project Deployment Link** (Cloud Run) | **`https://smt-world-2gbcoyhuea-uc.a.run.app`** (deployed 2026-06-29; pending public-invoker IAM) |
 | **Project PPT** | Fill `cohort 2 hack/Template_Prototype_Submission_Deck…pptx` from `docs/DECK_OUTLINE.md` → export PDF (≤5 MB) |
 | **GitHub Repository Link** | `https://github.com/JannetEkka/smt-apac` |
 | **Demo Video Link** (≤3 min) | *record from `docs/DEMO_SCRIPT.md`, then paste* |
@@ -60,7 +60,17 @@ gcloud artifacts repositories create smt --repository-format=docker --location=u
 ```
 
 ## Step 1 — deploy to Cloud Run, capture the URL
-- [ ] **Deploy**
+> **DONE 2026-06-29** — built + deployed `smt-world` in `us-central1`. URL:
+> `https://smt-world-2gbcoyhuea-uc.a.run.app`. The build's `--allow-unauthenticated` IAM set
+> failed (deploy SA lacked permission); grant the public invoker directly as project owner:
+> ```bash
+> gcloud run services add-iam-policy-binding smt-world --region=us-central1 \
+>   --member=allUsers --role=roles/run.invoker
+> ```
+> (Until then the service returns a Google 404 to anonymous requests — that's Cloud Run hiding a
+> private service, not a routing bug.)
+
+- [x] **Deploy**
 ```bash
 # Build the image and deploy the public API+frontend service (config: deploy/cloudbuild.yaml).
 gcloud builds submit --config deploy/cloudbuild.yaml --substitutions=_REGION=us-central1
