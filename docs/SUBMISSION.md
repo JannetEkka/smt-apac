@@ -10,11 +10,11 @@ Region used throughout: `us-central1`.
 | **Project PPT** | Fill `cohort 2 hack/Template_Prototype_Submission_Deck…pptx` from `docs/DECK_OUTLINE.md` → export PDF (≤5 MB) |
 | **GitHub Repository Link** | `https://github.com/JannetEkka/smt-apac` |
 | **Demo Video Link** (≤3 min) | *record from `docs/DEMO_SCRIPT.md`, then paste* |
-| **Brief Description** | see below (plain text, **968 chars** ≤ 1024) |
+| **Brief Description** | see below (plain text, **988 chars** ≤ 1024) |
 
-## Brief description (final, plain text — paste as-is, 968 chars)
+## Brief description (final, plain text — paste as-is, 988 chars)
 ```
-SMT World is an explainable decision-intelligence companion that turns noisy crypto markets into one plain-language, trustworthy decision — and teaches a total beginner why. Six AI personas (order-flow, technical, on-chain, whale, sentiment, regime) feed a JUDGE that issues a call with a faithful three-sentence explanation, a 0-100 risk score, and every persona's vote. Guests explore an interactive 3D "brain", climb a guided SMT to trading to crypto learning ladder, and chat with SMT — answers grounded in our own corpus via Gemini + AlloyDB pgvector RAG. Built on Vertex AI / Gemini with ADK agents and an MCP tool boundary, served on Cloud Run; decision activity lands in BigQuery and surfaces through a sanitized Looker Studio embed. We prove acceleration with NVIDIA cuDF (cudf.pandas, zero code change): the same strategy-validation pipeline runs far faster on GPU, lowering time-to-insight. Sample/synthetic data only — the trading edge stays private.
+SMT World is an explainable decision-intelligence companion that turns noisy crypto markets into one plain-language, trustworthy decision — and teaches a total beginner why. Six AI personas (order-flow, technical, on-chain, whale, sentiment, regime) feed a JUDGE that issues a call with a faithful three-sentence explanation, a 0-100 risk score, and every persona's vote. Guests explore an interactive 3D "brain", climb a guided SMT to trading to crypto learning ladder, and chat with SMT (Vertex AI + Gemini, ADK agents, MCP tool boundary). Every decision lands in BigQuery; a sanitized Looker Studio embed and a BigQuery Conversational Analytics agent let anyone ask the data in plain English — the data intelligence tool, no SQL needed. Served on Cloud Run. We prove acceleration with NVIDIA cuDF (cudf.pandas, zero code change): the same strategy-validation pipeline runs far faster on GPU, lowering time-to-insight. Sample/synthetic data only — the trading edge stays private.
 ```
 
 ## Tech checklist (need ≥2 across the lists — we use ~5)
@@ -22,10 +22,11 @@ SMT World is an explainable decision-intelligence companion that turns noisy cry
 - [x] **Cloud Run** — the public URL (API + 3D front-end); optional L4 GPU service
 - [x] **Vertex AI / Gemini + ADK** — educator + chat-with-SMT agents (Track 1)
 - [x] **MCP** — sanitized brain exposed as agent tools (Track 2)
-- [x] **AlloyDB + pgvector** — RAG education corpus (Track 3)
 - [x] **Looker Studio** — embedded public analytics
+- [x] **BigQuery Conversational Analytics** — plain-English data agent over `public_activity` (Cohort 2 Track 1)
 - [x] **NVIDIA cuDF / cudf.pandas** — CPCV acceleration benchmark (`accel/`)
-- [x] **NVIDIA GPUs on Google Cloud** — Vertex GPU notebook + Cloud Run L4
+- [x] **NVIDIA GPUs on Google Cloud** — Vertex GPU notebook (one-shot benchmark run)
+- [~] **AlloyDB + pgvector** — RAG education corpus (Track 3) — *optional stretch; deferred for cost (see Cost & strategy)*
 
 ## Rubric coverage
 - [x] Clear real-world user + problem (non-crypto retail beginner)
@@ -83,7 +84,32 @@ gcloud run services describe smt-world --region=us-central1 --format='value(stat
 curl -s "$(gcloud run services describe smt-world --region=us-central1 --format='value(status.url)')/healthz"
 ```
 
-## Step 2 — AlloyDB + pgvector, seed RAG, flip chat to live Gemini
+## Cost & strategy (operator decision 2026-06-30) — cheap, on-theme, win-capable
+Keeping services up for the ~2-week judging window (ballpark, us-central1):
+| Service | 2wk 24/7 | Note |
+|---|---|---|
+| Cloud Run | ~$0–2 | scales to zero, pay per request |
+| BigQuery | ~$0 | pennies of storage; queries free ≤1 TB/mo |
+| Looker Studio | free | — |
+| Vertex/Gemini (chat) | ~$0–1 | per-token, light demo use |
+| **AlloyDB** | **~$105–120** | min 2-vCPU, **can't scale to zero** — the one expensive piece |
+| **GPU benchmark** | **~$1** | run ONCE, shut down — not a kept-up cost |
+
+**Plan: lean on BigQuery (Cohort 2 theme), drop AlloyDB as the costly/optional piece.**
+We already satisfy "≥2 GCP/NVIDIA services" with **4 cheap live ones** (Cloud Run, Vertex/Gemini,
+BigQuery, Looker). We add **BigQuery Conversational Analytics** (Cohort 2 Track 1 — plain-English
+Q&A over `public_activity`) as the "data intelligence tool" centerpiece, and run the **cuDF GPU
+benchmark once** (~$1) for the acceleration evidence. **AlloyDB pgvector RAG = optional stretch**
+(Step 2) — its "grounded data Q&A" job is covered cheaper by BigQuery Conversational Analytics;
+do it only as a 1-day spin-up→demo→teardown if we want the Track-3 flex on a slide.
+
+## Step 2 — (OPTIONAL / DEFERRED) AlloyDB + pgvector RAG — lab-exact method
+> **Status: optional stretch** (see Cost & strategy). If done, follow the Track-3 / SmartDesk lab
+> method EXACTLY: in-database `embedding('text-embedding-005', …)::vector` (NOT Python-side
+> embedding), `google_ml_integration` + `vector` extensions in **AlloyDB Studio**, `VECTOR(768)`,
+> the `<=>` cosine operator, and the two service-account grants (AlloyDB SA → Vertex AI User;
+> Cloud Run SA → AlloyDB Client). The scaffold's `agents/rag/{ingest,retrieve}.py` would be
+> refactored to call the in-database `embedding()` function to match the lab before this is used.
 - [ ] **Stand up AlloyDB**
 ```bash
 # Create the AlloyDB cluster (set a strong password; reuse it in the connection string below).
@@ -128,8 +154,11 @@ curl -s -X POST "$(gcloud run services describe smt-world --region=us-central1 -
 > egress). If `/chat` stays `grounded:false`, the connector is the usual gap — attach it on the
 > `gcloud run services update` with `--vpc-connector` / `--network`.
 
-## Step 3 — cuDF CPU-vs-GPU benchmark on a Vertex GPU notebook
-- [ ] **Run the benchmark** (full steps in `deploy/vertex_gpu_notebook.md`):
+## Step 3 — cuDF CPU-vs-GPU benchmark on a Vertex GPU notebook (ONE-SHOT ~$1)
+> Run it ONCE, capture the number, then **STOP/DELETE the notebook instance** — a GPU is ~$/hour
+> and we only need the few-minute run. The speedup number lives in the deck/demo, not in a kept-up
+> service. (Step-by-step in `deploy/vertex_gpu_notebook.md`.)
+- [ ] **Run the benchmark**:
 ```bash
 # In a Vertex Workbench instance on a T4/L4 with the RAPIDS image, clone the repo, then:
 python accel/cudf_benchmark.py                      # CPU baseline (~13s, matches local)
@@ -173,6 +202,24 @@ for i in $(seq 1 5); do curl -s "$URL/world" >/dev/null; done
 # Confirm rows landed.
 bq query --use_legacy_sql=false 'SELECT COUNT(*) rows FROM `smt-bot-2026-v2.smtworld.decisions`'
 ```
+
+### Step 4b — BigQuery Conversational Analytics agent (Cohort 2 Track 1 — the cheap, on-theme centerpiece)
+> Follows the *"Introduction to the Conversational Analytics in BigQuery"* lab EXACTLY. This is the
+> "data intelligence tool people would actually use": plain-English Q&A over our activity view, no
+> SQL. ~free at demo scale. All in the **Console** (BigQuery Agent Catalog), no extra code.
+1. **IAM** → grant yourself **Gemini Data Analytics Data Agent Owner** on `smt-bot-2026-v2`.
+2. **BigQuery → Agents** → click **Enable the Data Analytics API with Gemini** (enables *Gemini in
+   BigQuery API* + *Gemini for Google Cloud API*).
+3. **Create agent** — Name: `SMT World Activity Agent`; Description: `Conversational analytics over
+   SMT World's public decision-activity`. **Knowledge source:** add the view
+   `smt-bot-2026-v2.smtworld.public_activity` (check the box → Add).
+4. **Structured context** → *Customise* → accept Gemini's auto-generated table + column descriptions
+   (Select all rows → Accept suggestions → Update).
+5. **Verified queries / instructions** (optional polish): add 1–2 example questions so the agent is
+   reliable in the demo, e.g. *"Which pair had the most SHORT decisions today?"*, *"Show average
+   conviction per pair this week."*
+6. **Test** in the agent chat with a plain-English question, then **screenshot** it for the deck +
+   demo (slide 7 / demo beat 5). Publish/share if you want it reachable by the judges.
 
 ## Step 5 — deck, demo video, brief (mostly done in-repo)
 - [x] Brief description finalized (above, 968 chars) — paste into the form
