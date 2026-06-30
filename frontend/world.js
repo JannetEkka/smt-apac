@@ -35,7 +35,8 @@ const pointer = new THREE.Vector2();
 
 function resize() {
   const r = canvas.parentElement.getBoundingClientRect();
-  renderer.setSize(r.width, r.height, false);
+  renderer.setPixelRatio(window.devicePixelRatio || 1);
+  renderer.setSize(r.width, r.height);   // updateStyle=true → canvas CSS size matches buffer (correct hit-math)
   camera.aspect = r.width / r.height;
   camera.updateProjectionMatrix();
 }
@@ -55,13 +56,30 @@ function placeNodes(pairs) {
   });
 }
 
-canvas.addEventListener("pointerdown", (e) => {
+// Click-to-select: distinguish a click from an orbit-drag (OrbitControls also owns pointerdown),
+// then pick the node under the cursor — with a forgiving nearest-node fallback so you don't have to
+// land pixel-perfect on a moving sphere.
+let downX = 0, downY = 0, downT = 0;
+canvas.addEventListener("pointerdown", (e) => { downX = e.clientX; downY = e.clientY; downT = Date.now(); });
+canvas.addEventListener("pointerup", (e) => {
+  if (Math.hypot(e.clientX - downX, e.clientY - downY) > 6 || Date.now() - downT > 500) return; // was a drag/orbit
   const r = canvas.getBoundingClientRect();
   pointer.x = ((e.clientX - r.left) / r.width) * 2 - 1;
   pointer.y = -((e.clientY - r.top) / r.height) * 2 + 1;
   raycaster.setFromCamera(pointer, camera);
-  const hit = raycaster.intersectObjects(nodes)[0];
-  if (hit) window.renderDecision?.(hit.object.userData.decision);
+  let pick = raycaster.intersectObjects(nodes)[0]?.object;
+  if (!pick) {                                    // fallback: nearest node in screen space
+    let best = 0.18;                              // ignore clicks too far from any coin
+    for (const n of nodes) {
+      const p = n.position.clone().project(camera);
+      const dist = Math.hypot(p.x - pointer.x, p.y - pointer.y);
+      if (dist < best) { best = dist; pick = n; }
+    }
+  }
+  if (pick) {
+    window.renderDecision?.(pick.userData.decision);
+    controls.autoRotate = false;                  // stop spinning once the user engages a pair
+  }
 });
 
 function animate() {
