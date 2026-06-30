@@ -6,6 +6,12 @@
 > Built for the **Google Gen AI Academy APAC — Cohort 2 hackathon (Challenge 2: a data
 > intelligence tool people would actually use, accelerated).**
 
+**▶ Live SMT World (flagship interactive UI):** **https://smt-weex-trading-bot.jannet-ekka.workers.dev**
+— the full "ocean" experience: 8 coins are islands whose look *is* the live call, the 6 personas
+are read per island, and the **JUDGE** is the central lighthouse. Includes a zero-knowledge
+tutorial + chat. *(The Cloud Run app in this repo is the APAC-track build of the same explainable
+brain; this link is the public product UI judges can click through right now.)*
+
 Most market tools are black boxes: a signal, no reasoning, no way to learn or trust. **SMT World**
 is the opposite. Six specialist AI personas — order-flow, technical, on-chain/whale, sentiment,
 market-regime — feed a **JUDGE** that issues one call (LONG / SHORT / WAIT) with a **faithful,
