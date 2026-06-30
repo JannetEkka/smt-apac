@@ -165,11 +165,13 @@ curl -s -X POST "$(gcloud run services describe smt-world --region=us-central1 -
 > 1. colab.research.google.com → New notebook → **Runtime → Change runtime type → T4 GPU → Save**.
 > 2. Get the benchmark (now on `main`) and run CPU then GPU:
 > ```python
+ > # all-shell lines — do NOT mix python print() with !cmd on one line (SyntaxError)
 > !wget -q https://raw.githubusercontent.com/JannetEkka/smt-apac/main/accel/cudf_benchmark.py
-> !python cudf_benchmark.py                                   # CPU baseline
-> !python -m cudf.pandas cudf_benchmark.py                    # GPU (cudf.pandas preinstalled in Colab GPU runtime)
+> !echo "===== CPU =====" && python cudf_benchmark.py
+> !echo "===== GPU =====" && python -m cudf.pandas cudf_benchmark.py
 > # bigger gap for the slide:
-> !BENCH_DAYS=3650 BENCH_SPLITS=80 python -m cudf.pandas cudf_benchmark.py
+> !echo "== CPU big ==" && BENCH_DAYS=3650 BENCH_SPLITS=80 python cudf_benchmark.py
+> !echo "== GPU big ==" && BENCH_DAYS=3650 BENCH_SPLITS=80 python -m cudf.pandas cudf_benchmark.py
 > ```
 > If `cudf.pandas` is missing: `!pip install --extra-index-url=https://pypi.nvidia.com cudf-cu12`.
 > Colab = Google infra + NVIDIA GPU, so it satisfies "NVIDIA GPUs on Google Cloud". (Vertex
