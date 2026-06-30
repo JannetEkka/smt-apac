@@ -211,14 +211,32 @@ bq query --use_legacy_sql=false 'SELECT COUNT(*) rows FROM `smt-bot-2026-v2.smtw
 > Follows the *"Introduction to the Conversational Analytics in BigQuery"* lab EXACTLY. This is the
 > "data intelligence tool people would actually use": plain-English Q&A over our activity view, no
 > SQL. ~free at demo scale. All in the **Console** (BigQuery Agent Catalog), no extra code.
-1. **IAM** → grant yourself **Gemini Data Analytics Data Agent Owner** on `smt-bot-2026-v2`.
+1. **IAM** → grant yourself **Gemini Data Analytics Data Agent Owner** ADDITIVELY (the Console
+   "Edit access" panel can try to *replace* Owner → "Cannot remove all owners"). Use gcloud:
+   ```bash
+   gcloud projects add-iam-policy-binding smt-bot-2026-v2 \
+     --member="user:jannet.ekka@gmail.com" \
+     --role="roles/geminidataanalytics.dataAgentOwner"
+   ```
 2. **BigQuery → Agents** → click **Enable the Data Analytics API with Gemini** (enables *Gemini in
    BigQuery API* + *Gemini for Google Cloud API*).
 3. **Create agent** — Name: `SMT World Activity Agent`; Description: `Conversational analytics over
    SMT World's public decision-activity`. **Knowledge source:** add the view
    `smt-bot-2026-v2.smtworld.public_activity` (check the box → Add).
-4. **Structured context** → *Customise* → accept Gemini's auto-generated table + column descriptions
-   (Select all rows → Accept suggestions → Update).
+   ⚠️ **Region:** dataset is **us-central1** — click the pencil next to "Region" and set `us-central1`
+   BEFORE saving (defaults to "US" multi-region, which can't query a us-central1 source; can't change
+   after save).
+4. **Structured context** → in the Agent Editor find the table → click **Customise**. Either accept
+   Gemini's auto-suggestions (*Accept* table description → check *Select all rows* → *Accept
+   suggestions* → *Update*), OR paste these manual descriptions:
+   - **Table:** `Hourly summary of SMT World's public, sanitized trading decisions — one row per hour bucket, per pair, per action. Counts and averages only; no parameters, thresholds, or PnL.`
+   - `hour`: `Hour bucket (timestamp truncated to the hour) the decisions fall in.`
+   - `pair`: `Crypto asset symbol: BTC, ETH, SOL, BNB, XRP, ADA, DOGE, LTC.`
+   - `action`: `SMT's call for that bucket: LONG, SHORT, or WAIT.`
+   - `decisions`: `Number of decisions in that hour for that pair and action.`
+   - `avg_conviction`: `Average conviction (confidence), 0 to 1.`
+   - `avg_risk`: `Average risk score, 0 to 100.`
+   Then **Update**.
 5. **System Instructions** (Instructions box) — paste this SMT-specific block (lab pattern):
    ```
    ### System Instruction
