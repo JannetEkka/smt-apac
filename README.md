@@ -19,6 +19,26 @@ three-sentence explanation**, a risk score, and every persona's vote. A non-cryp
 learns (SMT → trading → crypto), explores SMT's "brain" in 3D, chats with SMT, and can join a
 **simulated copy-trade** (launch partner: **WEEX**).
 
+## The bigger picture (what this glimpse is part of)
+SMT World is the **public, explainability-and-education surface** of a larger system the team has
+been building for over a year — it began as a whale-behaviour classification model on Colab +
+BigQuery and grew into a multi-persona, agentic decision engine. For this hackathon we deliberately
+show a **slice on synthetic data**: the reasoning, the 3D brain, the education, the conversational
+analytics — while the **alpha (signal params, per-pair research, calibrated thresholds, live PnL)
+stays private**. The north star, in three steps:
+1. **Understand** — anyone, crypto-novice included, gets a trustworthy decision *with the why*, and
+   a ladder that teaches them the concepts as they go.
+2. **Ask** — natural-language conversational analytics over what SMT is seeing (BigQuery), so users
+   interrogate the data, not just consume a number.
+3. **Act** — opt-in **simulated copy-trade today**, with a path to real execution on the user's
+   **preferred exchange** (WEEX launch partner) — each persona exposed as a composable **MCP** tool
+   so the brain plugs into other agents and surfaces. Goal: take someone from *"I don't get crypto"*
+   to *acting on an explained, risk-scored decision* as fast and as safely as possible.
+
+> **Analysis notebook:** [`notebooks/smt_world_activity_analysis.ipynb`](notebooks/smt_world_activity_analysis.ipynb)
+> charts the sanitized BigQuery activity (action mix, conviction over time, an `AI_FORECAST`) — runs
+> in BigQuery Studio or Colab. Aggregates only; the alpha stays private.
+
 ## The decision, made legible
 - **Action** — LONG / SHORT / WAIT (and WAIT is a feature: no forced trades).
 - **Conviction %** + a beginner **risk score**.
@@ -30,7 +50,7 @@ learns (SMT → trading → crypto), explores SMT's "brain" in 3D, chats with SM
 |---|---|---|
 | Agents (educator + chat-with-SMT) | **Vertex AI / Gemini + ADK** on **Cloud Run** | Track 1 |
 | Sanitized brain as agent tools | **MCP server** + **BigQuery** | Track 2 |
-| Grounded education answers | **AlloyDB + pgvector RAG** | Track 3 |
+| Ask-your-data in plain English | **BigQuery Conversational Analytics** (Gemini data agent) | Cohort 2 |
 | "What SMT is seeing" panels | **BigQuery + Looker Studio** | Cohort 2 |
 | Acceleration proof | **NVIDIA cuDF (zero-code-change GPU)** + **Cloud Run L4 / Vertex GPU** | — |
 | 3D guest UI | **Stitch** (HTML/Tailwind) + **three.js** on Cloud Run | — |

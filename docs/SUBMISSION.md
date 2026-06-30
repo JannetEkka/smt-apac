@@ -159,7 +159,11 @@ curl -s -X POST "$(gcloud run services describe smt-world --region=us-central1 -
 > egress). If `/chat` stays `grounded:false`, the connector is the usual gap — attach it on the
 > `gcloud run services update` with `--vpc-connector` / `--network`.
 
-## Step 3 — cuDF CPU-vs-GPU benchmark (ONE-SHOT, FREE via Colab)
+## Step 3 — cuDF CPU-vs-GPU benchmark ✅ DONE 2026-06-30 (free Colab T4)
+> **RESULT: CPU `total=24.02s` (cpcv 23.70s) → GPU `total=3.90s` (cpcv 3.48s) = ~6× faster
+> end-to-end, ~6.8× on the core compute, over 2,522,880 rows, identical checksum (40416.7522).**
+> Zero code change (`python -m cudf.pandas`). This is the acceleration-evidence number for the
+> deck (slide 8) + demo (beat 6). Screenshot the Colab cell output for the deck.
 > NOTE: the academy labs don't cover the NVIDIA/cuDF layer (it's the new acceleration piece), so
 > this follows `deploy/vertex_gpu_notebook.md` + standard RAPIDS usage, not a lab.
 > **Simplest path = Google Colab (free T4, ~5 min, nothing to delete):**
@@ -308,6 +312,6 @@ bq query --use_legacy_sql=false 'SELECT COUNT(*) rows FROM `smt-bot-2026-v2.smtw
 - [x] Deploy to Cloud Run; capture the URL (step 1) — `https://smt-world-2gbcoyhuea-uc.a.run.app`
 - [x] ~~AlloyDB~~ — SKIPPED (step 2; covered by BigQuery Conversational Analytics, cost decision)
 - [x] BQ dataset/view + Conversational Analytics agent working (step 4/4b) — agent answered (LTC, 10 SHORTs)
-- [ ] Publish the agent + screenshot it (step 4b TODO)
-- [ ] Run cuDF GPU benchmark; capture the speedup number (step 3 — Colab, free)
+- [x] Publish the agent (done) — screenshot for deck
+- [x] cuDF GPU benchmark — CPU 24.0s → GPU 3.9s = ~6× (step 3)
 - [ ] Record demo; export deck to PDF; paste all five links (step 5)
