@@ -50,20 +50,33 @@ def synth_ohlcv() -> pd.DataFrame:
 
 
 def cpcv_features(df: pd.DataFrame) -> float:
-    """The hot loop: per split, recompute rolling features + grouped aggregates (CPCV inner work)."""
+    """The hot loop: per split, recompute rolling features + grouped aggregates (CPCV inner work).
+
+    Every op here is GPU-native under `cudf.pandas` — whole-column rolling windows
+    (`Series.rolling(w).mean()/max()/min()/sum()`), vectorized column arithmetic, `shift`, and
+    `groupby` reductions (`mean`/`std`/`sum`). We deliberately AVOID per-group Python lambdas and
+    `GroupBy.apply`, which `cudf.pandas` must run on the CPU (with GPU↔CPU copies) and which made an
+    earlier version SLOWER on GPU than CPU. (See rapidsai/cudf docs: rolling + groupby reductions
+    run on GPU; custom lambdas/apply fall back.) Rolling is whole-column rather than per-pair — fine
+    for a throughput benchmark on synthetic data; the compute shape is what we're measuring.
+    """
     acc = 0.0
+    close, vol = df["close"], df["vol"]
+    pv = close * vol
     for s in range(N_SPLITS):
         w = 20 + s                                   # vary the window per split
-        g = df.groupby("pair", group_keys=False)
-        feat = df.assign(
-            ma=g["close"].transform(lambda x: x.rolling(w, min_periods=1).mean()),
-            sd=g["close"].transform(lambda x: x.rolling(w, min_periods=1).std()),
-            mom=g["close"].transform(lambda x: x.pct_change(w)),
-            vwap=g.apply(lambda x: (x["close"] * x["vol"]).cumsum() / x["vol"].cumsum()),
-        )
-        feat["z"] = (feat["close"] - feat["ma"]) / feat["sd"].replace(0, np.nan)
-        # A toy "backtest" reduction so the result depends on every feature.
-        acc += float(feat.groupby("pair")["z"].mean().abs().sum())
+        ma = close.rolling(w, min_periods=1).mean()
+        mx = close.rolling(w, min_periods=1).max()
+        mn = close.rolling(w, min_periods=1).min()
+        mom = close - close.shift(w)                 # momentum over the window
+        vwap = pv.rolling(w, min_periods=1).sum() / vol.rolling(w, min_periods=1).sum()
+        z = (close - ma) / (mx - mn).replace(0, np.nan)
+        feat = df.assign(z=z, mom=mom, vwap=vwap)
+        # Grouped reductions (GPU-native) so the result depends on every feature and every pair.
+        g = feat.groupby("pair")
+        acc += float(g["z"].mean().abs().sum())
+        acc += float(g["mom"].std().abs().sum())
+        acc += float(g["vwap"].mean().abs().sum())
     return acc
 
 

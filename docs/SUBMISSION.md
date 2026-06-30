@@ -44,9 +44,10 @@ return 200 on the synthetic demo brain; chat degrades gracefully (`grounded:fals
 is set; cuDF benchmark CPU baseline captured (below). BigQuery logging wired + no-ops without a
 project. The four GCP steps below need your project auth — run them in order.
 
-> **CPU benchmark baseline (captured locally 2026-06-29):**
-> `rows=2,522,880  build=1.52s  cpcv=11.77s  total=13.29s  checksum=3.0912`
-> (BENCH_DAYS=1095, BENCH_SPLITS=40, 8 pairs). The GPU run (step 3) gives the speedup ratio.
+> **CPU benchmark baseline (GPU-native rewrite, 2026-06-30):** `rows=2,522,880  cpcv≈16-20s`
+> (local ~17s; Colab CPU ~20s) at BENCH_DAYS=1095, BENCH_SPLITS=40, 8 pairs. The hot loop is now
+> all GPU-native ops (whole-column rolling + groupby reductions; no Python lambdas/apply, which
+> fall back to CPU and made the GPU path slower). Colab GPU run gives the speedup ratio.
 
 ## Step 0 — one-time project setup
 ```bash
@@ -158,11 +159,26 @@ curl -s -X POST "$(gcloud run services describe smt-world --region=us-central1 -
 > egress). If `/chat` stays `grounded:false`, the connector is the usual gap — attach it on the
 > `gcloud run services update` with `--vpc-connector` / `--network`.
 
-## Step 3 — cuDF CPU-vs-GPU benchmark on a Vertex GPU notebook (ONE-SHOT ~$1)
-> Run it ONCE, capture the number, then **STOP/DELETE the notebook instance** — a GPU is ~$/hour
-> and we only need the few-minute run. The speedup number lives in the deck/demo, not in a kept-up
-> service. (Step-by-step in `deploy/vertex_gpu_notebook.md`.)
-- [ ] **Run the benchmark**:
+## Step 3 — cuDF CPU-vs-GPU benchmark (ONE-SHOT, FREE via Colab)
+> NOTE: the academy labs don't cover the NVIDIA/cuDF layer (it's the new acceleration piece), so
+> this follows `deploy/vertex_gpu_notebook.md` + standard RAPIDS usage, not a lab.
+> **Simplest path = Google Colab (free T4, ~5 min, nothing to delete):**
+> 1. colab.research.google.com → New notebook → **Runtime → Change runtime type → T4 GPU → Save**.
+> 2. Get the benchmark (now on `main`) and run CPU then GPU:
+> ```python
+ > # all-shell lines — do NOT mix python print() with !cmd on one line (SyntaxError)
+> !wget -q https://raw.githubusercontent.com/JannetEkka/smt-apac/main/accel/cudf_benchmark.py
+> !echo "===== CPU =====" && python cudf_benchmark.py
+> !echo "===== GPU =====" && python -m cudf.pandas cudf_benchmark.py
+> # bigger gap for the slide:
+> !echo "== CPU big ==" && BENCH_DAYS=3650 BENCH_SPLITS=80 python cudf_benchmark.py
+> !echo "== GPU big ==" && BENCH_DAYS=3650 BENCH_SPLITS=80 python -m cudf.pandas cudf_benchmark.py
+> ```
+> If `cudf.pandas` is missing: `!pip install --extra-index-url=https://pypi.nvidia.com cudf-cu12`.
+> Colab = Google infra + NVIDIA GPU, so it satisfies "NVIDIA GPUs on Google Cloud". (Vertex
+> Workbench T4 is the GCP-native alternative if you want it on the project — see vertex doc; ~$1,
+> delete after.)
+- [ ] **Run the benchmark** (Colab above, or Vertex Workbench):
 ```bash
 # In a Vertex Workbench instance on a T4/L4 with the RAPIDS image, clone the repo, then:
 python accel/cudf_benchmark.py                      # CPU baseline (~13s, matches local)
@@ -171,8 +187,11 @@ python -m cudf.pandas accel/cudf_benchmark.py       # GPU — zero code change
 ```
 - [ ] Record GPU wall-time + the speedup ratio → fill the deck slide 8 and the demo script `[X]/[Y]`.
 
-## Step 4 — BigQuery landing + sanitized view + Looker embed
-- [ ] **Create dataset, table, view** (code already lands rows via `brain/bq_log.py`):
+## Step 4 — BigQuery landing + sanitized view + Looker embed ✅ DONE 2026-06-30
+> dataset `smtworld` + table `decisions` + view `public_activity` created; Cloud Run SA granted
+> bigquery dataEditor/jobUser; **74 rows landed** from the live `/world`. Looker embed = optional
+> (the Conversational Analytics agent below is the stronger surface).
+- [x] **Create dataset, table, view** (code already lands rows via `brain/bq_log.py`):
 ```bash
 # Create the dataset that holds decision activity.
 bq --location=us-central1 mk --dataset smt-bot-2026-v2:smtworld
@@ -207,7 +226,11 @@ for i in $(seq 1 5); do curl -s "$URL/world" >/dev/null; done
 bq query --use_legacy_sql=false 'SELECT COUNT(*) rows FROM `smt-bot-2026-v2.smtworld.decisions`'
 ```
 
-### Step 4b — BigQuery Conversational Analytics agent (Cohort 2 Track 1 — the cheap, on-theme centerpiece)
+### Step 4b — BigQuery Conversational Analytics agent ✅ WORKING 2026-06-30 (Cohort 2 Track 1 — centerpiece)
+> Agent `SMT World Activity Agent` over `public_activity` answers plain-English questions, e.g.
+> *"Which pair had the most SHORT decisions today?"* → **LTC, 10 SHORT decisions** (with reasoning
+> + key insight), querying live BigQuery. Region "US" multi-region queried the us-central1 source
+> fine. **TODO: click Publish (was Draft) + screenshot for the deck/demo.**
 > Follows the *"Introduction to the Conversational Analytics in BigQuery"* lab EXACTLY. This is the
 > "data intelligence tool people would actually use": plain-English Q&A over our activity view, no
 > SQL. ~free at demo scale. All in the **Console** (BigQuery Agent Catalog), no extra code.
@@ -282,8 +305,9 @@ bq query --use_legacy_sql=false 'SELECT COUNT(*) rows FROM `smt-bot-2026-v2.smtw
 - [x] BigQuery decision-logging wired into the API (`brain/bq_log.py`, best-effort)
 - [x] CPU benchmark baseline captured (13.29 s total)
 - [x] Demo script + deck outline + final brief written
-- [ ] Deploy to Cloud Run; capture the URL (step 1)
+- [x] Deploy to Cloud Run; capture the URL (step 1) — `https://smt-world-2gbcoyhuea-uc.a.run.app`
 - [x] ~~AlloyDB~~ — SKIPPED (step 2; covered by BigQuery Conversational Analytics, cost decision)
-- [ ] Run cuDF GPU benchmark; capture the speedup number (step 3)
-- [ ] Create BQ dataset/view + Looker embed (step 4)
+- [x] BQ dataset/view + Conversational Analytics agent working (step 4/4b) — agent answered (LTC, 10 SHORTs)
+- [ ] Publish the agent + screenshot it (step 4b TODO)
+- [ ] Run cuDF GPU benchmark; capture the speedup number (step 3 — Colab, free)
 - [ ] Record demo; export deck to PDF; paste all five links (step 5)
