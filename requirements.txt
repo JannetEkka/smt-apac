@@ -8,6 +8,7 @@ google-cloud-aiplatform>=1.60     # Vertex AI (Gemini, embeddings)
 google-adk>=0.2                   # Agent Development Kit (Track 1)
 mcp>=1.2                          # Model Context Protocol server (Track 2)
 psycopg2-binary>=2.9              # AlloyDB / pgvector (Track 3 RAG)
+google-cloud-bigquery>=3.20       # decision-activity landing → Looker (BigQuery)
 
 # --- NVIDIA acceleration benchmark (run in a RAPIDS/GPU env) ---
 pandas>=2.1

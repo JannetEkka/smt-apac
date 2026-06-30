@@ -6,7 +6,7 @@ WORKDIR /app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir fastapi "uvicorn[standard]" pydantic \
-    google-cloud-aiplatform google-adk mcp psycopg2-binary
+    google-cloud-aiplatform google-adk mcp psycopg2-binary google-cloud-bigquery
 
 COPY brain/ ./brain/
 COPY agents/ ./agents/
