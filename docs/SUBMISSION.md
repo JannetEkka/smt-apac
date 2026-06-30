@@ -44,9 +44,10 @@ return 200 on the synthetic demo brain; chat degrades gracefully (`grounded:fals
 is set; cuDF benchmark CPU baseline captured (below). BigQuery logging wired + no-ops without a
 project. The four GCP steps below need your project auth — run them in order.
 
-> **CPU benchmark baseline (captured locally 2026-06-29):**
-> `rows=2,522,880  build=1.52s  cpcv=11.77s  total=13.29s  checksum=3.0912`
-> (BENCH_DAYS=1095, BENCH_SPLITS=40, 8 pairs). The GPU run (step 3) gives the speedup ratio.
+> **CPU benchmark baseline (GPU-native rewrite, 2026-06-30):** `rows=2,522,880  cpcv≈16-20s`
+> (local ~17s; Colab CPU ~20s) at BENCH_DAYS=1095, BENCH_SPLITS=40, 8 pairs. The hot loop is now
+> all GPU-native ops (whole-column rolling + groupby reductions; no Python lambdas/apply, which
+> fall back to CPU and made the GPU path slower). Colab GPU run gives the speedup ratio.
 
 ## Step 0 — one-time project setup
 ```bash
