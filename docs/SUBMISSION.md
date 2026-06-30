@@ -103,8 +103,12 @@ benchmark once** (~$1) for the acceleration evidence. **AlloyDB pgvector RAG = o
 (Step 2) — its "grounded data Q&A" job is covered cheaper by BigQuery Conversational Analytics;
 do it only as a 1-day spin-up→demo→teardown if we want the Track-3 flex on a slide.
 
-## Step 2 — (OPTIONAL / DEFERRED) AlloyDB + pgvector RAG — lab-exact method
-> **Status: optional stretch** (see Cost & strategy). If done, follow the Track-3 / SmartDesk lab
+## Step 2 — AlloyDB + pgvector RAG — ❌ SKIPPED (operator 2026-06-30)
+> **Decision: SKIP.** AlloyDB is Track 3 (not Cohort 2); its grounded-Q&A role is covered by
+> BigQuery Conversational Analytics (Step 4b), and it's the only ~$110/2wk cost. We already meet
+> "≥2 GCP/NVIDIA services" with Cloud Run + Vertex/Gemini + BigQuery + Looker + Conversational
+> Analytics + cuDF. Chat still works (Gemini + corpus). Method retained below only for reference;
+> if ever revived, follow the Track-3 / SmartDesk lab
 > method EXACTLY: in-database `embedding('text-embedding-005', …)::vector` (NOT Python-side
 > embedding), `google_ml_integration` + `vector` extensions in **AlloyDB Studio**, `VECTOR(768)`,
 > the `<=>` cosine operator, and the two service-account grants (AlloyDB SA → Vertex AI User;
@@ -215,11 +219,37 @@ bq query --use_legacy_sql=false 'SELECT COUNT(*) rows FROM `smt-bot-2026-v2.smtw
    `smt-bot-2026-v2.smtworld.public_activity` (check the box → Add).
 4. **Structured context** → *Customise* → accept Gemini's auto-generated table + column descriptions
    (Select all rows → Accept suggestions → Update).
-5. **Verified queries / instructions** (optional polish): add 1–2 example questions so the agent is
-   reliable in the demo, e.g. *"Which pair had the most SHORT decisions today?"*, *"Show average
-   conviction per pair this week."*
-6. **Test** in the agent chat with a plain-English question, then **screenshot** it for the deck +
-   demo (slide 7 / demo beat 5). Publish/share if you want it reachable by the judges.
+5. **System Instructions** (Instructions box) — paste this SMT-specific block (lab pattern):
+   ```
+   ### System Instruction
+   * You are an expert analyst for SMT World's public decision-activity (the public_activity view).
+   * Each row = one hour-bucket of SMT's calls for one pair and one action (LONG/SHORT/WAIT).
+   * "decisions" is the count of calls; "avg_conviction" is 0-1; "avg_risk" is 0-100.
+   * Default to the most recent data; only show time series when the user asks for trends over time.
+   * This is sanitized public data — no trading params, thresholds, or PnL exist here; never imply them.
+   ### Field guidance
+   * pair: BTC/ETH/SOL/BNB/XRP/ADA/DOGE/LTC. action: LONG/SHORT/WAIT.
+   * Group by pair and/or action; sum decisions; average conviction/risk.
+   ```
+6. **Verified queries** ("golden queries") — *Add query*, validate, save (teaches business logic):
+   - Q: *"Which pair had the most SHORT decisions today?"*
+     ```sql
+     SELECT pair, SUM(decisions) AS shorts
+     FROM `smt-bot-2026-v2.smtworld.public_activity`
+     WHERE action = 'SHORT' AND DATE(hour) = CURRENT_DATE()
+     GROUP BY pair ORDER BY shorts DESC LIMIT 1;
+     ```
+   - Q: *"Average conviction per pair this week."*
+     ```sql
+     SELECT pair, ROUND(AVG(avg_conviction),2) AS conviction
+     FROM `smt-bot-2026-v2.smtworld.public_activity`
+     WHERE hour >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
+     GROUP BY pair ORDER BY conviction DESC;
+     ```
+7. **Settings → Maximum Bytes Billed** = `10000000000` (≈9.3 GB cap so no query can run up a bill).
+8. **Preview** (right pane) → **Save** → **Publish** → optionally **Share**. Then **Create
+   conversation** and ask a plain-English question. **Screenshot** it for the deck (slide 7) + demo
+   (beat 5). Bonus: ask *"predict next week's SHORT decisions for BTC"* to show **BQML AI_FORECAST**.
 
 ## Step 5 — deck, demo video, brief (mostly done in-repo)
 - [x] Brief description finalized (above, 968 chars) — paste into the form
@@ -235,7 +265,7 @@ bq query --use_legacy_sql=false 'SELECT COUNT(*) rows FROM `smt-bot-2026-v2.smtw
 - [x] CPU benchmark baseline captured (13.29 s total)
 - [x] Demo script + deck outline + final brief written
 - [ ] Deploy to Cloud Run; capture the URL (step 1)
-- [ ] Seed AlloyDB + flip chat live; verify `grounded:true` (step 2)
+- [x] ~~AlloyDB~~ — SKIPPED (step 2; covered by BigQuery Conversational Analytics, cost decision)
 - [ ] Run cuDF GPU benchmark; capture the speedup number (step 3)
 - [ ] Create BQ dataset/view + Looker embed (step 4)
 - [ ] Record demo; export deck to PDF; paste all five links (step 5)
