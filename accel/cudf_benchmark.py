@@ -52,6 +52,7 @@ def synth_ohlcv() -> pd.DataFrame:
 def cpcv_features(df: pd.DataFrame) -> float:
     """The hot loop: per split, recompute rolling features + grouped aggregates (CPCV inner work)."""
     acc = 0.0
+    pv = df["close"] * df["vol"]                      # price*volume, aligned to df's index
     for s in range(N_SPLITS):
         w = 20 + s                                   # vary the window per split
         g = df.groupby("pair", group_keys=False)
@@ -59,8 +60,13 @@ def cpcv_features(df: pd.DataFrame) -> float:
             ma=g["close"].transform(lambda x: x.rolling(w, min_periods=1).mean()),
             sd=g["close"].transform(lambda x: x.rolling(w, min_periods=1).std()),
             mom=g["close"].transform(lambda x: x.pct_change(w)),
-            vwap=g.apply(lambda x: (x["close"] * x["vol"]).cumsum() / x["vol"].cumsum()),
+            # VWAP via grouped cumulative sums — an index-aligned transform that cuDF runs
+            # natively. (df.assign(vwap=g.apply(...)) returns a reindexed Series that breaks
+            # under cudf.pandas — rapidsai/cudf#5475 — and the cumsum form is the same math.)
+            cum_pv=pv.groupby(df["pair"]).cumsum(),
+            cum_vol=g["vol"].cumsum(),
         )
+        feat["vwap"] = feat["cum_pv"] / feat["cum_vol"]
         feat["z"] = (feat["close"] - feat["ma"]) / feat["sd"].replace(0, np.nan)
         # A toy "backtest" reduction so the result depends on every feature.
         acc += float(feat.groupby("pair")["z"].mean().abs().sum())
