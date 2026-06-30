@@ -29,6 +29,10 @@ stays private**. The north star, in three steps:
    so the brain plugs into other agents and surfaces. Goal: take someone from *"I don't get crypto"*
    to *acting on an explained, risk-scored decision* as fast and as safely as possible.
 
+> **Analysis notebook:** [`notebooks/smt_world_activity_analysis.ipynb`](notebooks/smt_world_activity_analysis.ipynb)
+> charts the sanitized BigQuery activity (action mix, conviction over time, an `AI_FORECAST`) — runs
+> in BigQuery Studio or Colab. Aggregates only; the alpha stays private.
+
 ## The decision, made legible
 - **Action** — LONG / SHORT / WAIT (and WAIT is a feature: no forced trades).
 - **Conviction %** + a beginner **risk score**.
