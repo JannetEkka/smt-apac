@@ -12,8 +12,3 @@ venv/
 dist/
 build/
 *.egg-info/
-
-# Submission-workflow docs (kept local, not shown to judges)
-docs/SUBMISSION.md
-docs/DECK_OUTLINE.md
-docs/DEMO_SCRIPT.md
