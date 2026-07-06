@@ -10,19 +10,19 @@ Region used throughout: `us-central1`.
 | **Project PPT** | Fill `cohort 2 hack/Template_Prototype_Submission_Deck…pptx` from `docs/DECK_OUTLINE.md` → export PDF (≤5 MB) |
 | **GitHub Repository Link** | `https://github.com/JannetEkka/smt-apac` |
 | **Demo Video Link** (≤3 min) | *record from `docs/DEMO_SCRIPT.md`, then paste* |
-| **Brief Description** | see below (plain text, **988 chars** ≤ 1024) |
+| **Brief Description** | see below (plain text, **973 chars** ≤ 1024) |
 
-## Brief description (final, plain text — paste as-is, 988 chars)
+## Brief description (final, plain text — paste as-is, 973 chars)
 ```
-SMT World is an explainable decision-intelligence companion that turns noisy crypto markets into one plain-language, trustworthy decision — and teaches a total beginner why. Six AI personas (order-flow, technical, on-chain, whale, sentiment, regime) feed a JUDGE that issues a call with a faithful three-sentence explanation, a 0-100 risk score, and every persona's vote. Guests explore an interactive 3D "brain", climb a guided SMT to trading to crypto learning ladder, and chat with SMT (Vertex AI + Gemini, ADK agents, MCP tool boundary). Every decision lands in BigQuery; a sanitized Looker Studio embed and a BigQuery Conversational Analytics agent let anyone ask the data in plain English — the data intelligence tool, no SQL needed. Served on Cloud Run. We prove acceleration with NVIDIA cuDF (cudf.pandas, zero code change): the same strategy-validation pipeline runs far faster on GPU, lowering time-to-insight. Sample/synthetic data only — the trading edge stays private.
+SMT World is an explainable decision-intelligence companion that turns noisy crypto markets into one plain-language, trustworthy decision — and teaches a total beginner why. Six AI personas (order-flow, technical, on-chain, whale, sentiment, regime) feed a JUDGE that issues a call with a faithful three-sentence explanation, a 0-100 risk score, and every persona's vote. Guests explore an interactive 3D "brain", climb a guided SMT to trading to crypto learning ladder, and chat with SMT (Gemini on Vertex AI). Every decision lands in BigQuery, where a Conversational Analytics agent lets anyone ask the data in plain English — no SQL needed — and an executed notebook charts the sanitized activity. Served on Cloud Run. We prove acceleration with NVIDIA cuDF (cudf.pandas, zero code change): the same strategy-validation pipeline runs ~6x faster on GPU (24s to 3.9s over 2.5M rows), lowering time-to-insight. Demo data only — the real trading edge stays private.
 ```
 
 ## Tech checklist (need ≥2 across the lists — we use ~5)
 - [x] **BigQuery** — decision activity store + sanitized public view (`looker/DASHBOARD.md`); API now lands rows (`brain/bq_log.py`)
-- [x] **Cloud Run** — the public URL (API + 3D front-end); optional L4 GPU service
-- [x] **Vertex AI / Gemini + ADK** — educator + chat-with-SMT agents (Track 1)
-- [x] **MCP** — sanitized brain exposed as agent tools (Track 2)
-- [x] **Looker Studio** — embedded public analytics
+- [x] **Cloud Run** — the public URL (API + 3D front-end), live
+- [x] **Vertex AI / Gemini** — live chat + educator (ADK agent code ships in `agents/`, Track 1 pattern)
+- [x] **MCP** — sanitized brain as agent tools (`agents/mcp_server.py`; code in repo, the moat boundary in protocol form)
+- [~] **Looker Studio** — `looker/DASHBOARD.md` ready; **build the dashboard before claiming it on the deck, else drop the chip**
 - [x] **BigQuery Conversational Analytics** — plain-English data agent over `public_activity` (Cohort 2 Track 1)
 - [x] **NVIDIA cuDF / cudf.pandas** — CPCV acceleration benchmark (`accel/`)
 - [x] **NVIDIA GPUs on Google Cloud** — Vertex GPU notebook (one-shot benchmark run)
