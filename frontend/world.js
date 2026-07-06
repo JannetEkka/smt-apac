@@ -52,10 +52,13 @@ function makeLabel(text) {
   ctx.shadowColor = "rgba(0,0,0,0.85)"; ctx.shadowBlur = 10;
   ctx.fillStyle = "#eef2ff";
   ctx.fillText(text, 128, 48);
+  const tex = new THREE.CanvasTexture(c);
+  tex.needsUpdate = true;
   const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: new THREE.CanvasTexture(c), transparent: true, depthTest: false,
+    map: tex, transparent: true, depthTest: false, depthWrite: false,
   }));
-  sprite.scale.set(1.5, 0.56, 1);
+  sprite.scale.set(2.0, 0.75, 1);
+  sprite.renderOrder = 999;   // always draw on top of the coins
   return sprite;
 }
 
