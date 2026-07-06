@@ -42,15 +42,36 @@ function resize() {
 }
 window.addEventListener("resize", resize);
 
+// Name label above each coin — a canvas-texture sprite so it always faces the camera.
+function makeLabel(text) {
+  const c = document.createElement("canvas");
+  c.width = 256; c.height = 96;
+  const ctx = c.getContext("2d");
+  ctx.font = "bold 52px 'Segoe UI', Arial, sans-serif";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.shadowColor = "rgba(0,0,0,0.85)"; ctx.shadowBlur = 10;
+  ctx.fillStyle = "#eef2ff";
+  ctx.fillText(text, 128, 48);
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: new THREE.CanvasTexture(c), transparent: true, depthTest: false,
+  }));
+  sprite.scale.set(1.5, 0.56, 1);
+  return sprite;
+}
+
 function placeNodes(pairs) {
   const keys = Object.keys(pairs);
   keys.forEach((pair, i) => {
     const a = (i / keys.length) * Math.PI * 2;
     const d = pairs[pair];
+    const r = 0.45 + d.conf * 0.35;
     const mat = new THREE.MeshStandardMaterial({ color: COLORS[d.action] || COLORS.WAIT, roughness: 0.35 });
-    const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.45 + d.conf * 0.35, 24, 24), mat);
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 24), mat);
     mesh.position.set(Math.cos(a) * 3.6, Math.sin(a) * 3.6, Math.sin(i) * 0.6);
     mesh.userData = { pair, decision: d };
+    const label = makeLabel(pair);
+    label.position.set(0, r + 0.38, 0);
+    mesh.add(label);
     scene.add(mesh);
     nodes.push(mesh);
   });
