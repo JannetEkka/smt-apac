@@ -15,7 +15,7 @@
 | 6 | **Explainable + teaches** | Faithful 3-sentence "why" + persona votes (XAI); Educator ladder SMT→trading→crypto; Chat-with-SMT. *(chat + ladder screenshot)* |
 | 7 | **Ask your data (centerpiece)** | BigQuery **Conversational Analytics** agent over sanitized `public_activity` — plain English → SQL → answer + chart, no analyst. *(LTC/10-SHORTs screenshot)* |
 | 8 | **Acceleration (the evidence)** | NVIDIA **cuDF / cudf.pandas**, zero code change, on the strategy-validation step (2.52M rows). **CPU 24.0s → GPU 3.9s ≈ 6×** (~6.8× on the compute step), identical checksum. *(cudf_speedup.png)* Caption: "Verbatim logs + executed notebook in the repo — same work, proven." |
-| 9 | **GCP + NVIDIA stack** | Cloud Run · Vertex AI/Gemini + ADK · MCP · BigQuery · Conversational Analytics · Looker Studio* · NVIDIA cuDF. *(*Looker only if you build the dashboard — else drop this one chip.)* |
+| 9 | **GCP + NVIDIA stack** | **Live:** Cloud Run · Vertex AI/Gemini · BigQuery · Conversational Analytics · NVIDIA cuDF (T4). **In the codebase:** ADK agents + MCP tool boundary. Looker Studio* *(*only if you build the dashboard — else drop the chip)*. |
 | 10 | **Responsible AI / moat** | Rebuilt personal project shown as a public slice — synthetic/demo data; signal params, thresholds, research, PnL withheld, and we say so. |
 | 11 | **Live + links** | App: `https://smt-world-2gbcoyhuea-uc.a.run.app` · Repo: `github.com/JannetEkka/smt-apac` · Demo video. "Try it now" (optional QR). |
 
