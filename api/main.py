@@ -21,7 +21,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from brain import adapter, bq_log
+from brain import adapter, bq_log, prices as price_feed
 
 app = FastAPI(title="SMT World", version="0.1.0",
               description="Explainable decision-intelligence companion — GCP APAC Cohort 2")
@@ -58,6 +58,13 @@ def decision(pair: str, background_tasks: BackgroundTasks):
     # Land sanitized activity into BigQuery (best-effort, off the request path).
     background_tasks.add_task(bq_log.log_decision, d, adapter.SOURCE)
     return d
+
+
+@app.get("/prices")
+def prices():
+    """Real USD spot + 24h change for the 8 pairs — what the simulated copy-trade marks
+    against. Public market data (never moat); `live:false` means the committed fallback."""
+    return price_feed.prices()
 
 
 @app.get("/education/{level}")

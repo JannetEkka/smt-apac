@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SMT World — see the why</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=3" />
   <!-- three.js for the 3D "SMT World" brain (import map → world.js uses bare 'three') -->
   <script type="importmap">
   { "imports": {
@@ -17,11 +17,35 @@
   <!-- Layout is a hand-cleaned version of a Google Stitch export (HTML + utility classes). -->
   <header class="topbar">
     <div class="brand">◎ SMT World</div>
-    <div class="tag">Explainable decision-intelligence · <span id="brainSource">demo</span> data</div>
+    <div class="tag">
+      Explainable decision-intelligence ·
+      <span id="brainSource">demo</span> data ·
+      <span id="liveDot" class="livedot" title="connected">● live</span>
+    </div>
   </header>
 
+  <!-- ═══ ONBOARDING GATE (first visit — meet the beginner at the door) ═══ -->
+  <div id="onboard" class="onboard hidden">
+    <div class="onboard-card">
+      <div class="onboard-badge">◎</div>
+      <h2>Before you sail — which sounds like you?</h2>
+      <p class="muted">No crypto knowledge needed. Pick a start; you can change it anytime.</p>
+      <div class="onboard-opts">
+        <button class="ob-opt" data-level="crypto"><b>I'm new to crypto</b><span>Start from the very beginning</span></button>
+        <button class="ob-opt" data-level="trading"><b>I'm new to trading</b><span>I get crypto, not the trading part</span></button>
+        <button class="ob-opt" data-skip="1"><b>I know both</b><span>Skip ahead — just show me the world</span></button>
+      </div>
+      <div class="onboard-steps">
+        <span>1 · Watch SMT decide</span><span>2 · See the <b>why</b></span><span>3 · Paper copy-trade</span>
+      </div>
+    </div>
+  </div>
+
   <main>
-    <section id="world" class="world"><canvas id="brainCanvas"></canvas>
+    <section id="world" class="world">
+      <!-- live tape: all 8 pairs, colored by the current call, updating -->
+      <div id="tape" class="tape"></div>
+      <canvas id="brainCanvas"></canvas>
       <div class="hint">Click a pair to see <b>why</b>. Drag to orbit.</div>
     </section>
 
@@ -49,27 +73,43 @@
         </form>
       </div>
 
+      <!-- ═══ SIMULATED COPY-TRADE — a working paper portfolio on real prices ═══ -->
       <div class="card copytrade">
-        <h3>Copy-trade SMT <span class="badge">simulated</span></h3>
-        <p class="muted">Mirror SMT's calls in a paper portfolio. Live execution via our launch
-          partner <b>WEEX</b> is coming — join the waitlist.</p>
-        <form id="waitlist" class="chatrow">
-          <input id="email" type="email" placeholder="you@email.com" />
-          <button type="submit">Join waitlist</button>
-        </form>
-        <div id="waitlistMsg" class="muted"></div>
+        <h3>Copy-trade SMT <span class="badge">simulated · paper</span></h3>
+
+        <div id="ctIntro">
+          <p class="muted">Mirror SMT's current calls into a <b>paper portfolio</b>, marked on
+            <b>real prices</b>. It's a sandbox — learn the <i>why</i> before you ever risk a cent.
+            SMT's <b>WAIT</b> calls are skipped on purpose (no forced trades).</p>
+          <button id="ctStart" disabled>Copy SMT with 10,000 paper units</button>
+        </div>
+
+        <div id="ctPortfolio" class="hidden">
+          <div class="ct-summary">
+            <div><span class="muted small">Portfolio value</span><div id="ctValue" class="ct-big">—</div></div>
+            <div><span class="muted small">Paper P&amp;L</span><div id="ctPnl" class="ct-big">—</div></div>
+          </div>
+          <div id="ctNote" class="muted small"></div>
+          <ul id="ctPositions" class="ct-positions"></ul>
+          <div class="ct-actions">
+            <button id="ctStop" class="ghost">Stop &amp; reset</button>
+            <span class="muted small">entry = 24h ago · marked live on real prices</span>
+          </div>
+        </div>
       </div>
     </aside>
   </main>
 
   <footer class="foot">
     The alpha (signal params, per-pair research, live PnL) is withheld for IP reasons — what you
-    see is SMT's explainability + education surface. Built for the Google Gen AI Academy APAC,
-    Cohort 2. <a href="https://github.com/JannetEkka/smt-apac">Source</a> ·
-    <a href="https://smt-weex-trading-bot.jannet-ekka.workers.dev">Live SMT World ↗</a>.
+    see is SMT's explainability + education surface on demo signals + real prices. Built for the
+    Google Gen AI Academy APAC, Cohort 2.
+    <a href="https://github.com/JannetEkka/smt-apac">Source</a> ·
+    <a href="https://smt-weex-trading-bot.jannet-ekka.workers.dev">Live SMT World ↗</a> ·
+    <a href="#" id="adminLink">Operator login</a>.
   </footer>
 
-  <script type="module" src="world.js?v=2"></script>
-  <script src="app.js?v=2"></script>
+  <script type="module" src="world.js?v=3"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
