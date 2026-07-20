@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SMT World — see the why</title>
   <link rel="stylesheet" href="styles.css?v=3" />
-  <!-- three.js for the 3D "SMT World" brain (import map → world.js uses bare 'three') -->
+  <!-- three.js for the 3D "SMT World" brain — VENDORED (no CDN dependency, works offline). -->
   <script type="importmap">
   { "imports": {
-      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      "three": "./vendor/three.module.js",
+      "three/addons/": "./vendor/addons/"
   } }
   </script>
 </head>
