@@ -13,9 +13,10 @@ dist/
 build/
 *.egg-info/
 
-# Internal prep docs (kept in gcp-ai-labs, not part of submission)
+# Internal prep docs (kept in gcp-ai-labs, not part of submission).
+# NOTE: docs/MOAT.md is judge-facing (linked from README/ARCHITECTURE) — it is
+# tracked, not ignored. Only the internal prep/pitch docs are ignored here.
 docs/DECK_OUTLINE.md
 docs/DEMO_SCRIPT.md
-docs/MOAT.md
 docs/SUBMISSION.md
 docs/assets/

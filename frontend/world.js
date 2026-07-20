@@ -114,16 +114,32 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-fetch(`${API}/world`)
-  .then((r) => r.json())
-  .then((data) => {
-    document.getElementById("brainSource").textContent = data.source || "demo";
+// Re-color existing nodes in place when a later snapshot arrives (liveness without
+// tearing down the scene). Colors track the call.
+function updateNodes(pairs) {
+  for (const mesh of nodes) {
+    const d = pairs[mesh.userData.pair];
+    if (!d) continue;
+    mesh.userData.decision = d;
+    mesh.material.color.setHex(COLORS[d.action] || COLORS.WAIT);
+  }
+}
+
+// app.js owns the /world poll and calls this with each snapshot. If three.js (CDN) failed
+// to import, this module never loads and app.js's optional-call no-ops — tape + copy-trade
+// still work. Reaching this line means three.js loaded fine.
+let _booted3d = false;
+window.renderWorld3D = function (data) {
+  if (!data?.pairs) return;
+  if (!_booted3d) {
+    _booted3d = true;
     placeNodes(data.pairs);
     resize();
     animate();
-    window.renderDecision?.(Object.values(data.pairs)[0]);
-  })
-  .catch((err) => {
-    document.getElementById("decisionCard").innerHTML =
-      `<div class="muted">Could not reach the API (${err}). Is the service running?</div>`;
-  });
+  } else {
+    updateNodes(data.pairs);
+  }
+};
+
+// If app.js polled before this module finished loading, catch up now.
+if (window.SMT_WORLD) window.renderWorld3D(window.SMT_WORLD);

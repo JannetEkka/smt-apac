@@ -32,23 +32,43 @@ persona exposed as a composable **MCP** tool.
 - **Drivers** — which personas actually led the call (faithful, not post-hoc).
 - **The why** — plain English, with what the dissenters thought.
 
+## The user journey (what a beginner actually does)
+**Guest → onboard → watch live decisions → simulated copy-trade.** A first-time visitor is met at
+the door ("new to crypto? to trading? or skip ahead"), watches SMT's calls update live in the 3D
+world, and can opt into a **paper copy-trade** — mirror SMT's calls into a paper portfolio marked on
+**real prices**, with a running (simulated) P&L, clearly labelled. It's a sandbox: the point is to
+learn the *why* before risking anything. The operator's admin login unlocks the real book behind the
+same UI (the moat boundary is the auth line — see [`docs/MOAT.md`](docs/MOAT.md)).
+
+## Under the hood (current, moat-safe)
+Beyond the six-persona JUDGE, the live brain runs a forward **`P(up|4h)` probability forecaster**
+(gated on out-of-sample robustness — CPCV + a deflated-Sharpe test — so only models that survive a
+purged forward test ship), **quorum-renormalized** JUDGE conviction (a dead feed can't strand the
+call), and a **range-fade** behaviour inside held bands. Architecture is open; the tuned numbers are
+not.
+
 ## Built on (GCP + NVIDIA)
 | Layer | Tech |
 |---|---|
 | Agents (educator + chat-with-SMT) | **Vertex AI / Gemini + ADK** on **Cloud Run** |
 | Sanitized brain as agent tools | **MCP server** + **BigQuery** |
 | Ask-your-data in plain English | **BigQuery Conversational Analytics** (Gemini data agent) |
-| Acceleration proof | **NVIDIA cuDF** (zero-code-change GPU) — CPU 24.0s → GPU 3.9s (~6×) |
+| Acceleration proof | **NVIDIA GPU** on the real lake — XGBoost `P(up\|4h)` **CPU 3.48s → CUDA 1.63s (2.1×)** train, **6.5×** inference (measured, T4) |
 | 3D / ocean guest UI | **Stitch** (HTML/Tailwind) + **three.js** |
 
 Chat + education run on a curated corpus + Gemini. (An AlloyDB pgvector RAG path is included in
 `agents/rag/` as a ready option but **disabled for cost** — Conversational Analytics covers the
 "ask the data" job cheaper.)
 
-**Why acceleration matters (the scored rubric line):** SMT validates strategies with CPCV
-(combinatorial purged cross-validation) — heavy, repetitive pandas over long history. `accel/` runs
-the *same* code on CPU and on an NVIDIA GPU via `cudf.pandas` (zero code change): **2.52M rows,
-24.0s → 3.9s, identical result.** Faster validation → fresher decisions, lower time-to-insight.
+**Why acceleration matters (the scored rubric line):** SMT re-learns from its own outcomes — it
+trains a forward `P(up|4h)` model and validates with CPCV (combinatorial purged cross-validation)
+over long history. Measured on the **real lake** (446,976 kline rows + 163,554 archived decisions,
+8 pairs), XGBoost `P(up|4h)` runs **CPU 3.48s → CUDA 1.63s (2.1×)** train and **6.5×** inference on
+a free-Colab **T4**, with **identical model output** — the GPU changes the *speed*, not the answer.
+At today's corpus the feature-engineering leg is already sub-second on CPU, so we say so rather than
+overclaim; the win compounds with scale (1m klines = 12× rows, per-pair sweeps = 8×, rolling CPCV =
+dozens of refits). `accel/cudf_benchmark.py` is kept as an honest **scale projection** of that
+compounding. Faster re-learning → fresher decisions, lower time-to-insight.
 
 ## Map
 ```
