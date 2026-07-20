@@ -1,7 +1,10 @@
-# Vertex AI GPU notebook — the cuDF acceleration run
+# Vertex AI / Colab GPU notebook — the acceleration run
 
-The "acceleration evidence" number for the submission comes from running
-`accel/cudf_benchmark.py` on an NVIDIA GPU and comparing to CPU.
+The **measured** acceleration numbers in the submission (XGBoost `P(up|4h)` **CPU 3.48s → CUDA
+1.63s = 2.1×** train, **6.5×** inference, on 446,976 real kline rows + 163,554 decisions) come from
+a **T4 run on SMT's real lake**. This repo ships `accel/cudf_benchmark.py` as the reproducible,
+public **scale projection** of the same compute on synthetic data — run it on any GPU to see the
+`cudf.pandas` win at large scale.
 
 ## Fastest path (RAPIDS image)
 1. Vertex AI → Workbench → **new instance** with a GPU (T4 or L4) and the **RAPIDS** image

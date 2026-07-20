@@ -15,7 +15,7 @@ flowchart TB
     BQ --> CA["Conversational Analytics agent<br/>plain-English Q&A, no SQL"]
     BQ --> NB["BigQuery Studio notebook<br/>activity charts + AI_FORECAST"]
 
-    ACCEL["accel/ (offline, one-shot)<br/>cudf.pandas CPCV benchmark<br/>CPU 24.0s → NVIDIA GPU 3.9s (~6×)"]
+    ACCEL["accel/ (offline)<br/>NVIDIA GPU on the real lake<br/>XGBoost P(up|4h): CPU 3.48s → CUDA 1.63s (2.1×), 6.5× infer"]
 ```
 
 ## Process flow (data → decision → insight)
@@ -23,12 +23,13 @@ flowchart TB
 ```mermaid
 flowchart LR
     F["Market feeds"] --> P["6 personas<br/>flow · technical · whale<br/>onchain · sentiment · regime"]
-    P --> J["JUDGE<br/>votes + vetoes"]
+    P --> J["JUDGE<br/>quorum-renormalized<br/>votes + vetoes"]
+    FC["Forward P(up|4h)<br/>forecaster (CPCV+DSR-gated)"] --> J
     J --> W["Faithful 'why'<br/>(flip-test verified)"]
-    W --> D["Decision card<br/>action · conviction · risk<br/>3D World UI"]
+    W --> D["Decision card<br/>action · conviction · risk<br/>3D World UI + copy-trade"]
     D --> B["BigQuery<br/>sanitized view"]
     B --> A["Conversational Analytics<br/>+ notebook (AI_FORECAST)"]
-    V["Validation loop: CPCV on NVIDIA GPU (cuDF, ~6×)"] -.-> P
+    V["Re-learn loop: P(up) train + CPCV on NVIDIA GPU (2.1–6.5×)"] -.-> FC
 ```
 
 ## Request flow
