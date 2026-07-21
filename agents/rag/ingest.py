@@ -3,7 +3,7 @@
 Reads agents/rag/corpus/*.md, chunks them, embeds with Vertex AI text-embeddings, and upserts
 into an AlloyDB `education_chunks` table with a vector column. Run once to seed the knowledge base:
 
-    GOOGLE_CLOUD_PROJECT=smt-bot-2026-v2 \
+    GOOGLE_CLOUD_PROJECT=gapac-cohort-2 \
     ALLOYDB_CONN="postgresql://user:pass@host:5432/smtworld" \
     python -m agents.rag.ingest
 
