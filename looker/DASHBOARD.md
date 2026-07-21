@@ -11,7 +11,7 @@ moat-safe columns through a view — **no params, no thresholds, no PnL**.
 
 ```sql
 -- raw landing table (written by the API / a scheduled job)
-CREATE TABLE IF NOT EXISTS `smt-bot-2026-v2.smtworld.decisions` (
+CREATE TABLE IF NOT EXISTS `gapac-cohort-2.smtworld.decisions` (
   ts        TIMESTAMP,
   pair      STRING,
   action    STRING,        -- LONG / SHORT / WAIT
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS `smt-bot-2026-v2.smtworld.decisions` (
 );
 
 -- public-safe view: counts + distributions only, nothing reconstructable into alpha
-CREATE OR REPLACE VIEW `smt-bot-2026-v2.smtworld.public_activity` AS
+CREATE OR REPLACE VIEW `gapac-cohort-2.smtworld.public_activity` AS
 SELECT
   TIMESTAMP_TRUNC(ts, HOUR) AS hour,
   pair,
@@ -30,7 +30,7 @@ SELECT
   COUNTIF(TRUE)             AS decisions,
   ROUND(AVG(conf), 2)       AS avg_conviction,
   ROUND(AVG(risk))          AS avg_risk
-FROM `smt-bot-2026-v2.smtworld.decisions`
+FROM `gapac-cohort-2.smtworld.decisions`
 GROUP BY hour, pair, action;
 ```
 

@@ -1,4 +1,9 @@
 # Build + deploy the SMT World API (CPU) to Cloud Run.
+#
+# PROJECT: this deploys to the ACTIVE gcloud project ($PROJECT_ID below). For this
+# submission that MUST be the hackathon project `gapac-cohort-2` (NOT the trading-bot's
+# `smt-bot-2026-v2`). Set it first:  gcloud config set project gapac-cohort-2
+#
 # Run:  gcloud builds submit --config deploy/cloudbuild.yaml --substitutions=_REGION=us-central1
 substitutions:
   _REGION: us-central1
