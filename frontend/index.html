@@ -1,115 +1,523 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SMT World — see the why</title>
-  <link rel="stylesheet" href="styles.css?v=3" />
-  <!-- three.js for the 3D "SMT World" brain — VENDORED (no CDN dependency, works offline). -->
-  <script type="importmap">
-  { "imports": {
-      "three": "./vendor/three.module.js",
-      "three/addons/": "./vendor/addons/"
-  } }
-  </script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SMT World — A market you can sail</title>
+<!-- Vendored for offline / CDN-independent resilience (no runtime third-party deps):
+     Tailwind Play, the 3 text fonts, and a subset (9-icon) Material Symbols font. -->
+<script src="vendor/tailwind.js"></script>
+<link href="vendor/symbols.css" rel="stylesheet"/>
+<link href="vendor/textfonts.css" rel="stylesheet"/>
+<script>
+  tailwind.config = { darkMode:"class", theme:{ extend:{
+    colors:{ background:"#001429", surface:"#001429", "surface-variant":"#20364e",
+      "surface-container":"#082138", "surface-container-lowest":"#000f20",
+      primary:"#f2ca50", "primary-container":"#d4af37", "on-primary-container":"#554300",
+      "on-primary":"#3c2f00", secondary:"#52ddb4", "secondary-container":"#00b08a",
+      "on-secondary-container":"#003b2c", error:"#ffb4ab", "error-container":"#93000a",
+      "on-error-container":"#ffdad6", "on-surface":"#d1e4ff", "on-surface-variant":"#d0c5af",
+      outline:"#99907c", "primary-fixed":"#ffe088", "primary-fixed-dim":"#e9c349",
+      "secondary-fixed":"#73fad0", "surface-tint":"#e9c349" },
+    fontFamily:{ display:["Manrope"], headline:["Manrope"], body:["Plus Jakarta Sans"], mono:["JetBrains Mono"] },
+    spacing:{ "safe-area":"24px", "container-padding":"40px" } } } }
+</script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;width:100%;overflow:hidden;background:#001429;user-select:none}
+  body{font-family:"Plus Jakarta Sans",sans-serif;color:#d1e4ff}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24}
+  .font-display{font-family:Manrope,sans-serif;font-weight:700}
+  .font-mono{font-family:"JetBrains Mono",monospace;letter-spacing:.08em}
+  /* glass + glows from the Stitch design system */
+  .glass-card{backdrop-filter:blur(24px);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
+  .glass-premium{background:rgba(0,20,41,.1);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.08)}
+  .gold-glow{text-shadow:0 0 15px rgba(212,175,55,.6),0 0 30px rgba(212,175,55,.2)}
+  .lighthouse-glow{box-shadow:0 0 50px rgba(212,175,55,.3),inset 0 0 20px rgba(255,255,255,.4)}
+  @keyframes bobbing{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+  .bobbing{animation:bobbing 6s ease-in-out infinite}
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  .animate-float{animation:floaty 6s ease-in-out infinite}
+  @keyframes pulse-soft{0%,100%{opacity:.3;filter:blur(20px)}50%{opacity:.7;filter:blur(36px)}}
+  .lighthouse-pulse{animation:pulse-soft 4s ease-in-out infinite}
+  @keyframes shine{to{background-position:200% center}}
+  .wave-text{background:linear-gradient(to right,#f2ca50,#ffe088,#f2ca50);-webkit-background-clip:text;
+    background-clip:text;-webkit-text-fill-color:transparent;background-size:200% auto;animation:shine 4s linear infinite}
+  .hidden{display:none!important}
+  /* structural layout (explicit so it never depends on the Tailwind CDN finishing) */
+  #sea{position:fixed;inset:0;width:100vw;height:100vh}
+  #landing,#ocean{position:fixed;inset:0}
+  #landing{display:flex;align-items:center;justify-content:center;text-align:center}
+  #stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  #islands{position:absolute;inset:0}
+  #lighthouseArt{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);height:clamp(118px,21vh,185px);
+    width:auto;z-index:10;pointer-events:none;filter:drop-shadow(0 0 30px rgba(242,202,80,.45)) drop-shadow(0 10px 18px rgba(0,0,0,.5))}
+
+  /* ── Ambient life (hand-coded; an animator can extend) ───────────── */
+  /* lighthouse 360° beam — two opposite light wedges sweeping from the lamp */
+  .lh-beam{position:absolute;left:50%;top:41%;width:min(96vw,900px);height:min(96vw,900px);
+    transform:translate(-50%,-50%);z-index:8;pointer-events:none;mix-blend-mode:screen;opacity:.92;
+    background:conic-gradient(from 0deg,
+      rgba(255,236,170,0) 0deg, rgba(255,236,170,.55) 15deg, rgba(255,236,170,0) 32deg,
+      rgba(255,236,170,0) 180deg, rgba(255,236,170,.55) 195deg, rgba(255,236,170,0) 212deg,
+      rgba(255,236,170,0) 360deg);
+    -webkit-mask:radial-gradient(circle, #000 3%, rgba(0,0,0,.7) 18%, transparent 70%);
+    mask:radial-gradient(circle, #000 3%, rgba(0,0,0,.7) 18%, transparent 70%);
+    animation:sweep 8s linear infinite}
+  @keyframes sweep{to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+  /* drifting clouds */
+  .sky{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+  .cloud{position:absolute;background:rgba(255,255,255,.10);border-radius:40px;filter:blur(12px)}
+  .c1{width:150px;height:40px;top:11%;animation:drift 52s linear infinite}
+  .c2{width:210px;height:52px;top:20%;opacity:.7;animation:drift 72s linear infinite;animation-delay:-26s}
+  .c3{width:110px;height:34px;top:6%;opacity:.5;animation:drift 60s linear infinite;animation-delay:-44s}
+  @keyframes drift{from{transform:translateX(-260px)}to{transform:translateX(calc(100vw + 260px))}}
+
+  /* swimming whale shadows under the surface */
+  .whale{position:absolute;z-index:2;pointer-events:none;height:26px;width:84px;border-radius:50%;
+    background:radial-gradient(ellipse at 62% 50%, rgba(4,16,32,.5), rgba(4,16,32,0) 72%);filter:blur(2px)}
+  .whale::after{content:"";position:absolute;left:-12px;top:5px;
+    border-left:15px solid rgba(4,16,32,.42);border-top:8px solid transparent;border-bottom:8px solid transparent}
+  .wh1{top:64%;animation:swim 40s linear infinite}
+  .wh2{top:80%;width:58px;height:20px;opacity:.7;animation:swim 56s linear infinite;animation-delay:-24s}
+  @keyframes swim{from{transform:translateX(-150px)}to{transform:translateX(calc(100vw + 150px))}}
+  #orbit{position:fixed;inset:0;z-index:40}
+  #orbit.flex{display:flex;align-items:center;justify-content:center}
+  /* vestigial (old orbit design) — keep it inert in plain CSS so it never
+     intercepts the drag-to-pan even if the Tailwind CDN is slow/blocked */
+  #focusBackdrop{position:fixed;inset:0;z-index:20;pointer-events:none;opacity:0}
+  /* right-side detail panel */
+  .detail{position:fixed;top:0;right:0;height:100%;width:min(380px,92vw);z-index:45;overflow-y:auto;
+    background:linear-gradient(180deg,rgba(10,28,52,.96),rgba(6,18,38,.97));backdrop-filter:blur(18px);
+    border-left:1px solid rgba(255,255,255,.12);box-shadow:-18px 0 50px rgba(0,0,0,.5);
+    padding:22px 22px 30px;transition:transform .35s cubic-bezier(.34,1.2,.6,1)}
+  .detail.hidden{display:block!important;transform:translateX(105%);pointer-events:none}
+  .detail-x{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:8px;border:none;
+    background:rgba(255,255,255,.08);color:#d1e4ff;font-size:14px;cursor:pointer}
+  .detail-hero{display:flex;align-items:center;gap:14px;margin:6px 0 18px}
+  .detail-art{width:96px;height:auto;max-height:84px;object-fit:contain;filter:drop-shadow(0 6px 12px rgba(0,0,0,.5))}
+  .detail-hero h2{font-size:26px;margin:0;line-height:1}
+  .dverdict{margin-top:6px;display:inline-block;padding:5px 12px;border-radius:9999px;font-family:"JetBrains Mono",monospace;
+    font-size:12px;font-weight:600}
+  .dverdict.long{background:rgba(82,221,180,.16);color:#73fad0;border:1px solid #52ddb4}
+  .dverdict.short{background:rgba(255,180,171,.16);color:#ffb4ab;border:1px solid #ffb4ab}
+  .dverdict.wait{background:rgba(138,160,189,.14);color:#d0c5af;border:1px solid #8aa0bd}
+  .dverdict.block{background:rgba(154,124,255,.16);color:#b9a7ff;border:1px solid #9a7cff}
+  .detail-sub{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.12em;color:#9fb4cf;
+    text-transform:uppercase;margin-bottom:10px}
+  .detail-forces{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+  .dforce{display:flex;gap:11px;align-items:flex-start;padding:9px 11px;border-radius:12px;
+    background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}
+  .dforce.lead{border-color:rgba(242,202,80,.5);background:rgba(242,202,80,.07)}
+  .dforce .ico{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;flex:none;
+    border:2px solid #8aa0bd;color:#d0c5af;font-size:16px}
+  .dforce.long .ico{border-color:#52ddb4;color:#73fad0} .dforce.short .ico{border-color:#ffb4ab;color:#ffb4ab}
+  .dforce.neutral .ico{filter:grayscale(.6) opacity(.7)}
+  .dforce .meta{flex:1;min-width:0}
+  .dforce .row1{display:flex;align-items:center;gap:7px}
+  .dforce .nm{font-weight:700;font-size:13px} .dforce .lead-tag{font-size:9px;font-weight:800;color:#f2ca50;
+    border:1px solid #f2ca50;border-radius:9999px;padding:1px 6px}
+  .dforce .vt{margin-left:auto;font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700}
+  .dforce.long .vt{color:#73fad0} .dforce.short .vt{color:#ffb4ab} .dforce.neutral .vt{color:#8aa0bd}
+  .dforce .say{font-size:12.5px;color:#cdd9ee;line-height:1.4;margin-top:3px}
+  .detail-why{display:flex;gap:9px;padding:13px;border-radius:14px;font-size:13.5px;line-height:1.55;color:#eaf1ff;
+    background:linear-gradient(135deg,rgba(242,202,80,.1),rgba(212,175,55,.04));border:1px solid rgba(242,202,80,.35)}
+  .dwhy-ico{font-size:18px;flex:none}
+  /* during the walkthrough's "tap an island" step, lift the side panel above the
+     dim spotlight overlay (#walk is z-70) so it reads as focused, not greyed out.
+     Desktop only — on phones the panel is full-screen and would cover the coachmark. */
+  @media (min-width:641px){ .detail.walk-lit{z-index:80} }
+  /* focused island = a gold highlight (panel shows the detail; no centering) */
+  .island-node.sel .isle-art{filter:drop-shadow(0 0 18px rgba(242,202,80,.85)) drop-shadow(0 6px 9px rgba(0,0,0,.5))!important}
+  .hud-l{position:fixed;top:20px;left:22px;z-index:30}
+  .hud-r{position:fixed;top:16px;right:18px;z-index:30}
+  .bottomnav{position:fixed;bottom:0;left:0;width:100%;z-index:30;display:flex;justify-content:center;
+    gap:64px;padding:16px 0 24px;background:linear-gradient(to top,#001429,transparent)}
+  .navitem{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;
+    cursor:pointer;color:rgba(209,228,255,.5);transition:color .2s}
+  .navitem:hover{color:#e9c349}
+  .navitem.active{color:#f2ca50}
+  .navitem.active .navlbl{text-shadow:0 0 10px rgba(242,202,80,.55)}
+  .navlbl{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.06em}
+  /* map-style legend (what each island means) */
+  .legend{position:fixed;left:18px;bottom:18px;z-index:30;width:226px;
+    background:rgba(8,24,52,.7);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.12);
+    border-radius:14px;overflow:hidden;font-size:12.5px}
+  .legend-head{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:9px 13px;background:none;border:none;color:#ffe088;font-family:"JetBrains Mono",monospace;
+    font-size:11px;letter-spacing:.08em;cursor:pointer}
+  .legend-body{padding:4px 13px 12px;display:flex;flex-direction:column;gap:7px}
+  .legend.collapsed .legend-body{display:none}
+  .legend.collapsed #legChev{transform:rotate(0)}
+  #legChev{transition:.2s;transform:rotate(90deg)}
+  .leg-row{display:flex;align-items:center;gap:10px;color:#d1e4ff;line-height:1.25}
+  .leg-row b{font-weight:700}
+  /* the actual island art identifies each verdict (no abstract colour codes) */
+  .leg-isle{width:38px;height:30px;object-fit:contain;flex:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+  .leg-row.long b{color:#73fad0} .leg-row.short b{color:#ffb4ab}
+  .leg-row.wait b{color:#d0c5af} .leg-row.block b{color:#b9a7ff}
+  .leg-tip{margin-top:4px;padding-top:7px;border-top:1px solid rgba(255,255,255,.08);color:#9fb4cf;font-size:11.5px}
+
+  /* ── Islands: appearance = verdict ─────────────────────────────── */
+  .island-node{position:absolute;left:50%;top:50%;cursor:pointer;
+    transform:translate(calc(-50% + var(--ix)),calc(-50% + var(--iy)));
+    transition:transform .7s cubic-bezier(.34,1.56,.64,1),opacity .4s,filter .4s}
+  .island-node.focused{transform:translate(-50%,-50%) scale(1.5);z-index:60}
+  .island-node:hover{z-index:50}
+  .island-orbit.focusing .island-node:not(.focused){opacity:.12;filter:grayscale(1);pointer-events:none}
+  .isle-inner{animation:bobbing 6s ease-in-out infinite;position:relative}
+  .isle-core{display:grid;place-items:center;border-radius:9999px;backdrop-filter:blur(20px);
+    background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.18);transition:.4s;width:84px;height:84px}
+  .isle-core .tk{font-family:"JetBrains Mono",monospace;font-weight:500;letter-spacing:.08em;font-size:13px}
+  /* island ARTWORK (state-based webp) */
+  .isle-art{display:block;margin:0 auto;height:80px;width:auto;max-width:112px;object-fit:contain;transition:.4s}
+  .island-node.long  .isle-art{filter:drop-shadow(0 0 13px rgba(82,221,180,.65)) drop-shadow(0 6px 9px rgba(0,0,0,.5))}
+  .island-node.short .isle-art{filter:drop-shadow(0 0 13px rgba(255,180,171,.6)) drop-shadow(0 6px 9px rgba(0,0,0,.5))}
+  .island-node.wait  .isle-art{filter:saturate(.8) brightness(.92) drop-shadow(0 6px 9px rgba(0,0,0,.45))}
+  .island-node.block .isle-art{filter:grayscale(.25) drop-shadow(0 0 12px rgba(154,124,255,.5)) drop-shadow(0 6px 9px rgba(0,0,0,.5))}
+  .isle-label{margin-top:2px;text-align:center;font-family:"JetBrains Mono",monospace;font-weight:600;font-size:12px;
+    letter-spacing:.06em;text-shadow:0 1px 5px #000}
+  .island-node.long .isle-label{color:#73fad0} .island-node.short .isle-label{color:#ffb4ab}
+  .island-node.wait .isle-label,.island-node.block .isle-label{color:#d0c5af}
+  .isle-lock{position:absolute;top:-6px;right:8px;font-size:15px;filter:drop-shadow(0 1px 3px #000)}
+  .island-node.long  .isle-core{border-color:#52ddb4;box-shadow:0 0 28px rgba(82,221,180,.4);background:rgba(82,221,180,.07)}
+  .island-node.long  .tk{color:#73fad0}
+  .island-node.short .isle-core{border-color:#ffb4ab;box-shadow:0 0 28px rgba(255,180,171,.35);background:rgba(255,180,171,.06)}
+  .island-node.short .tk{color:#ffb4ab}
+  .island-node.wait  .isle-core{opacity:.6;width:70px;height:70px}
+  .island-node.wait  .tk{color:#d0c5af}
+  .island-node.block .isle-core{background:rgba(0,0,0,.45);border-color:transparent;filter:grayscale(1);opacity:.5;width:70px;height:70px}
+  .caret{position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:13px;font-weight:900}
+  .island-node.long  .caret{color:#52ddb4} .island-node.short .caret{color:#ffb4ab}
+  .isle-tip{position:absolute;top:-44px;left:50%;transform:translateX(-50%);white-space:nowrap;opacity:0;
+    transition:.2s;pointer-events:none;padding:5px 11px;border-radius:9999px;font-family:"JetBrains Mono",monospace;
+    font-size:11px;backdrop-filter:blur(8px);background:rgba(0,20,41,.7);border:1px solid rgba(255,255,255,.14)}
+  .island-node:hover .isle-tip{opacity:1}
+  .tip-long{color:#73fad0} .tip-short{color:#ffb4ab} .tip-wait,.tip-block{color:#d0c5af}
+
+  /* ── Focus orbit forces ─────────────────────────────────────────── */
+  #orbitForces{position:absolute;left:50%;top:50%}
+  .orbit-btn{position:absolute;left:0;top:0;display:grid;place-items:center;width:58px;height:58px;border-radius:9999px;
+    backdrop-filter:blur(20px);background:rgba(255,255,255,.05);border:2px solid #8aa0bd;color:#d0c5af;
+    pointer-events:auto;transition:transform .2s;animation:gin .45s ease backwards;
+    transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty)))}
+  @keyframes gin{from{opacity:0;transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) scale(.3)}}
+  .orbit-btn:hover{transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) scale(1.16)!important}
+  .orbit-btn.long{border-color:#52ddb4;color:#73fad0;box-shadow:0 0 16px rgba(82,221,180,.5)}
+  .orbit-btn.short{border-color:#ffb4ab;color:#ffb4ab;box-shadow:0 0 16px rgba(255,180,171,.5)}
+  .orbit-btn.neutral{border-color:rgba(138,160,189,.4);color:#8aa0bd;filter:grayscale(.6) opacity(.75)}
+  .orbit-btn.lead::after{content:"";position:absolute;inset:-6px;border-radius:9999px;border:2px solid #f2ca50;animation:leadpulse 1.8s ease-in-out infinite}
+  @keyframes leadpulse{0%,100%{opacity:.5}50%{opacity:1}}
+  .orbit-lbl{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);white-space:nowrap;
+    font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.06em;color:#d0c5af}
+  .focus-backdrop{background:radial-gradient(circle at center,transparent 28%,rgba(0,20,41,.92) 100%)}
+
+  /* ── Onboarding: gate · tutor chat · walkthrough ─────────────────── */
+  .blurred{filter:blur(9px) brightness(.45);transition:filter .9s ease}
+  #gate,#tutor,#walk{position:fixed;inset:0;z-index:70}
+  #gate{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;text-align:center;padding:20px}
+  .guide{width:92px;height:122px;filter:drop-shadow(0 6px 22px rgba(212,175,55,.45))}
+  .gate-speech{font-family:Manrope,sans-serif;font-size:clamp(1.1rem,3.4vw,1.5rem);max-width:560px;color:#eaf1ff;line-height:1.5}
+  .gate-speech b{color:#f2ca50}
+  .gate-btns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;max-width:720px}
+  .gate-btn{display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left;min-width:200px;flex:1;
+    padding:16px 18px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);
+    backdrop-filter:blur(20px);transition:.18s;color:#d1e4ff;cursor:pointer}
+  .gate-btn:hover{border-color:#f2ca50;transform:translateY(-2px)}
+  .gate-btn b{font-family:Manrope,sans-serif;font-size:15px;color:#fff}
+  .gate-btn span{font-size:12px;color:#9fb4cf}
+
+  #tutor{display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,10,22,.5);backdrop-filter:blur(4px)}
+  .tutor-card{width:100%;max-width:540px;height:min(82vh,660px);display:flex;flex-direction:column;
+    background:linear-gradient(180deg,#0e2546,#0a1c38);border:1px solid rgba(255,255,255,.12);border-radius:22px;overflow:hidden}
+  .tutor-head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.08)}
+  .guide-mini{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:17px;background:linear-gradient(135deg,#ffe088,#d4af37);flex:none}
+  .tutor-head b{font-family:Manrope,sans-serif;font-size:14px;display:block}
+  .tutor-head .muted{font-size:11px}
+  .tutor-x{margin-left:auto;width:30px;height:30px;border-radius:8px;border:none;background:rgba(255,255,255,.08);color:#d1e4ff;flex:none}
+  .chatlog{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:11px}
+  .bub{max-width:86%;padding:11px 14px;border-radius:16px;font-size:14px;line-height:1.5;animation:rise .3s ease}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}}
+  .bub.smt{align-self:flex-start;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-bottom-left-radius:4px}
+  .bub.smt b{color:#f2ca50}
+  .bub.user{align-self:flex-end;background:rgba(82,221,180,.14);border:1px solid rgba(82,221,180,.3);color:#dffaf2;border-bottom-right-radius:4px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;padding:0 18px 6px}
+  .chip2{padding:7px 12px;border-radius:20px;border:1px solid rgba(242,202,80,.4);background:rgba(242,202,80,.08);
+    color:#ffe088;font-size:12.5px;cursor:pointer;transition:.15s}
+  .chip2:hover{background:rgba(242,202,80,.18)}
+  .chip2.act{border-color:#52ddb4;background:rgba(82,221,180,.12);color:#73fad0}
+  .tutor-foot{display:flex;gap:8px;padding:12px 14px;border-top:1px solid rgba(255,255,255,.08);align-items:center}
+  #tutorInput{flex:1;min-width:0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:20px;
+    padding:10px 14px;color:#d1e4ff;font-size:13.5px;outline:none}
+  .send{width:38px;height:38px;border-radius:50%;border:none;background:rgba(255,255,255,.08);color:#d1e4ff;flex:none}
+  .gotit{border:none;background:linear-gradient(135deg,#ffe088,#d4af37);color:#3c2f00;font-family:"JetBrains Mono",monospace;
+    font-size:11px;font-weight:600;padding:9px 13px;border-radius:20px;white-space:nowrap;flex:none}
+
+  #walk{pointer-events:none}
+  .spot{position:fixed;border:2.5px solid #f2ca50;border-radius:50%;
+    box-shadow:0 0 0 4000px rgba(0,10,22,.72),0 0 26px rgba(242,202,80,.6);
+    transition:all .5s cubic-bezier(.34,1.4,.6,1);pointer-events:none}
+  .coach{position:fixed;max-width:300px;background:linear-gradient(180deg,#0e2546,#0a1c38);border:1px solid rgba(242,202,80,.4);
+    border-radius:16px;padding:16px;pointer-events:auto;transition:all .4s ease;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+  .coach-text{font-size:14px;line-height:1.55;color:#eaf1ff}.coach-text b{color:#f2ca50}
+  .coach-nav{display:flex;align-items:center;justify-content:space-between;margin-top:14px}
+  .coach-dots{display:flex;gap:6px}.coach-dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.2);display:block}
+  .coach-dots i.on{background:#f2ca50}
+
+  /* ── Responsive / mobile pass ────────────────────────────────────── */
+  @media (max-width:640px){
+    #lighthouseArt{height:clamp(86px,15vh,132px)}
+    .detail{width:100vw;border-left:none}                 /* full-screen panel on phones */
+    .detail-art{width:78px;max-height:68px}
+    .bottomnav{gap:44px;padding:10px 0 16px}
+    /* lift the legend above the bottom nav so they don't collide */
+    .legend{left:10px;bottom:70px;width:200px;font-size:11.5px}
+    .legend.collapsed{width:auto}
+    .leg-isle{width:30px;height:24px}
+    .hud-l .font-display{font-size:1rem}
+    .gate-speech{font-size:1.1rem}
+    .gate-btn{min-width:100%}
+    .tutor-card{height:88vh;max-width:100%}
+    .coach{max-width:84vw}
+  }
+  @media (max-width:380px){ .legend{width:172px} .bottomnav{gap:32px} }
+
+  /* ── Login / connect-exchange modal ─────────────────────────────── */
+  #login{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;
+    padding:16px;background:rgba(0,10,22,.66);backdrop-filter:blur(6px)}
+  .login-card{position:relative;width:100%;max-width:420px;background:linear-gradient(180deg,#0e2546,#0a1c38);
+    border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:30px 26px 22px;text-align:center}
+  .login-logo{height:52px;width:auto;margin:0 auto 10px;filter:drop-shadow(0 6px 18px rgba(212,175,55,.4))}
+  .login-card h2{font-size:22px;margin:0 0 4px}
+  .login-card .muted{font-size:13px}
+  .login-weex{display:flex;align-items:center;gap:12px;width:100%;text-align:left;margin:18px 0 10px;
+    padding:14px 16px;border-radius:14px;border:1px solid #52ddb4;background:rgba(82,221,180,.1);
+    color:#dffaf2;cursor:pointer;transition:.16s}
+  .login-weex:hover{background:rgba(82,221,180,.18)}
+  .login-weex .material-symbols-outlined{font-size:24px;color:#73fad0}
+  .login-weex b{display:block;font-size:14.5px;color:#fff}.login-weex small{font-size:11.5px;color:#9fb4cf}
+  .login-fields{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+  .login-fields input{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);border-radius:10px;
+    color:#d1e4ff;padding:10px 13px;font-size:13px;outline:none}
+  .login-fields input:focus{border-color:#52ddb4}
+  .login-or{display:flex;align-items:center;gap:10px;color:#8aa0bd;font-size:11px;margin:8px 0}
+  .login-or::before,.login-or::after{content:"";flex:1;height:1px;background:rgba(255,255,255,.12)}
+  .login-guest{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);
+    background:rgba(255,255,255,.04);color:#d1e4ff;cursor:pointer;font-size:13.5px;transition:.16s}
+  .login-guest:hover{border-color:#f2ca50}
+  .login-note{margin-top:14px;font-size:11px;line-height:1.5}
+
+  /* ── Account panel (reuses .detail positioning) ─────────────────── */
+  .acct-head{display:flex;align-items:center;gap:13px;margin:4px 0 16px}
+  .acct-avatar{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:22px;flex:none;
+    background:linear-gradient(135deg,#ffe088,#d4af37)}
+  .acct-mode{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.06em;color:#73fad0;margin-top:3px}
+  .acct-mode.paper{color:#d0c5af}
+  .acct-cards{display:flex;gap:9px;margin-bottom:16px}
+  .acct-card{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:11px 12px}
+  .acct-big{font-size:17px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums}
+  .acct-intro p{font-size:13px;line-height:1.5;margin-bottom:12px}
+  .acct-copy,.acct-flat{width:100%;padding:12px;border-radius:12px;border:none;cursor:pointer;font-weight:700;font-size:14px}
+  .acct-copy{background:linear-gradient(135deg,#73fad0,#00b08a);color:#022}
+  .acct-flat{background:rgba(255,180,171,.12);border:1px solid #ffb4ab;color:#ffb4ab}
+  .acct-sub{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.12em;color:#9fb4cf;
+    text-transform:uppercase;margin:6px 0 8px}
+  .acct-positions{list-style:none;padding:0;margin:0 0 12px}
+  .acct-positions li{display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:10px 0;border-top:1px solid rgba(255,255,255,.08);font-size:13px}
+  .acct-pp{display:flex;flex-direction:column;gap:2px}
+  .acct-pp b{font-size:13.5px}.acct-pp .sd{font-size:10px;font-family:"JetBrains Mono",monospace}
+  .acct-pp .sd.long{color:#73fad0}.acct-pp .sd.short{color:#ffb4ab}
+  .acct-px{flex:1;text-align:center;color:#9fb4cf;font-size:11.5px;font-family:"JetBrains Mono",monospace}
+  .acct-up{font-weight:700;font-variant-numeric:tabular-nums;min-width:64px;text-align:right}
+  .acct-actions{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+  .acct-note{line-height:1.5}
+</style>
 </head>
-<body>
-  <!-- Layout is a hand-cleaned version of a Google Stitch export (HTML + utility classes). -->
-  <header class="topbar">
-    <div class="brand">◎ SMT World</div>
-    <div class="tag">
-      Explainable decision-intelligence ·
-      <span id="brainSource">demo</span> data ·
-      <span id="liveDot" class="livedot" title="connected">● live</span>
-    </div>
-  </header>
 
-  <!-- ═══ ONBOARDING GATE (first visit — meet the beginner at the door) ═══ -->
-  <div id="onboard" class="onboard hidden">
-    <div class="onboard-card">
-      <div class="onboard-badge">◎</div>
-      <h2>Before you sail — which sounds like you?</h2>
-      <p class="muted">No crypto knowledge needed. Pick a start; you can change it anytime.</p>
-      <div class="onboard-opts">
-        <button class="ob-opt" data-level="crypto"><b>I'm new to crypto</b><span>Start from the very beginning</span></button>
-        <button class="ob-opt" data-level="trading"><b>I'm new to trading</b><span>I get crypto, not the trading part</span></button>
-        <button class="ob-opt" data-skip="1"><b>I know both</b><span>Skip ahead — just show me the world</span></button>
-      </div>
-      <div class="onboard-steps">
-        <span>1 · Watch SMT decide</span><span>2 · See the <b>why</b></span><span>3 · Paper copy-trade</span>
-      </div>
+<body class="bg-background">
+
+<!-- ═══ Animated ocean shader (shared background) ═══ -->
+<canvas id="sea" class="fixed inset-0 w-full h-full z-0"></canvas>
+<div class="fixed inset-0 z-0 pointer-events-none" style="background:radial-gradient(circle at center,transparent 0%,#001429 100%)"></div>
+
+<!-- ═══ LANDING ═══ -->
+<section id="landing" class="fixed inset-0 z-20 flex items-center justify-center">
+  <div class="absolute top-20 right-20 w-96 h-96 rounded-full blur-[120px] pointer-events-none animate-pulse" style="background:rgba(242,202,80,.05)"></div>
+  <div class="absolute bottom-10 left-10 w-[500px] h-[500px] rounded-full blur-[150px] pointer-events-none animate-pulse" style="background:rgba(82,221,180,.05);animation-delay:2s"></div>
+  <main class="relative z-10 flex flex-col items-center text-center px-container-padding">
+    <div class="mb-8 animate-float">
+      <img src="smt_logo.png" alt="" style="height:68px;width:auto;margin:0 auto 12px;filter:drop-shadow(0 6px 22px rgba(212,175,55,.4))" onerror="this.style.display='none'"/>
+      <h1 class="font-display text-[clamp(2.2rem,8vw,3.4rem)] text-primary gold-glow tracking-tight mb-2">SMT WORLD</h1>
+      <div class="h-px w-24 mx-auto" style="background:linear-gradient(to right,transparent,rgba(242,202,80,.5),transparent)"></div>
     </div>
+    <p class="font-headline text-2xl text-on-surface-variant mb-12">A market you can <span class="wave-text italic font-bold">sail</span>.</p>
+    <div class="relative group">
+      <div class="absolute -inset-4 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" style="background:rgba(242,202,80,.2)"></div>
+      <button onclick="enterGuest()" class="relative flex items-center gap-3 px-12 py-5 bg-primary-container text-on-primary-container font-mono text-xs uppercase tracking-widest rounded-full lighthouse-glow hover:scale-105 active:scale-95 transition-all">
+        <span>Enter as guest</span>
+        <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">sailing</span>
+      </button>
+    </div>
+    <button onclick="openLogin()" class="mt-5 font-mono text-[11px] uppercase tracking-widest text-on-surface-variant underline decoration-dotted underline-offset-4 hover:text-primary transition-colors" style="background:none;border:none;cursor:pointer">Log in · connect WEEX to copy-trade →</button>
+    <div class="mt-20 flex items-center gap-8 font-mono text-[11px] tracking-widest text-on-surface-variant/70 opacity-70">
+      <span><span class="inline-block w-1.5 h-1.5 rounded-full bg-secondary animate-pulse mr-2"></span>8 ISLANDS LIVE</span>
+      <span><span class="inline-block w-1.5 h-1.5 rounded-full bg-primary animate-pulse mr-2"></span>LIGHTHOUSE ONLINE</span>
+    </div>
+    <p class="mt-6 font-mono text-[10px] uppercase tracking-[0.3em] text-outline">New here? A guide meets you at the door.</p>
+  </main>
+</section>
+
+<!-- ═══ OCEAN (the world) ═══ -->
+<section id="ocean" class="hidden fixed inset-0 z-10">
+  <!-- top HUD -->
+  <div class="hud-l flex items-center gap-2">
+    <img src="smt_logo.png" alt="" style="height:26px;width:auto" onerror="this.style.display='none'"/>
+    <span class="font-display text-primary text-lg gold-glow">SMT</span>
   </div>
+  <button onclick="openGate()" title="Learn the basics" class="hud-r w-12 h-12 rounded-full grid place-items-center font-display text-on-primary-container"
+    style="background:linear-gradient(135deg,#ffe088,#d4af37);box-shadow:0 0 18px rgba(212,175,55,.45)">P</button>
 
-  <main>
-    <section id="world" class="world">
-      <!-- live tape: all 8 pairs, colored by the current call, updating -->
-      <div id="tape" class="tape"></div>
-      <canvas id="brainCanvas"></canvas>
-      <div class="hint">Click a pair to see <b>why</b>. Drag to orbit.</div>
-    </section>
-
-    <aside class="panel">
-      <div id="decisionCard" class="card">
-        <div class="muted">Pick a pair in the world →</div>
-      </div>
-
-      <div class="card">
-        <h3>New here? Start the ladder</h3>
-        <div class="ladder">
-          <button data-level="smt">What is SMT?</button>
-          <button data-level="trading">Trading 101</button>
-          <button data-level="crypto">Crypto 101</button>
-        </div>
-        <div id="lesson" class="lesson muted">Tap a rung to learn — no crypto knowledge needed.</div>
-      </div>
-
-      <div class="card">
-        <h3>Chat with SMT</h3>
-        <div id="chatlog" class="chatlog"></div>
-        <form id="chatForm" class="chatrow">
-          <input id="chatInput" placeholder="Ask me anything — like 'what is a long?'" autocomplete="off"/>
-          <button type="submit">Ask</button>
-        </form>
-      </div>
-
-      <!-- ═══ SIMULATED COPY-TRADE — a working paper portfolio on real prices ═══ -->
-      <div class="card copytrade">
-        <h3>Copy-trade SMT <span class="badge">simulated · paper</span></h3>
-
-        <div id="ctIntro">
-          <p class="muted">Mirror SMT's current calls into a <b>paper portfolio</b>, marked on
-            <b>real prices</b>. It's a sandbox — learn the <i>why</i> before you ever risk a cent.
-            SMT's <b>WAIT</b> calls are skipped on purpose (no forced trades).</p>
-          <button id="ctStart" disabled>Copy SMT with 10,000 paper units</button>
-        </div>
-
-        <div id="ctPortfolio" class="hidden">
-          <div class="ct-summary">
-            <div><span class="muted small">Portfolio value</span><div id="ctValue" class="ct-big">—</div></div>
-            <div><span class="muted small">Paper P&amp;L</span><div id="ctPnl" class="ct-big">—</div></div>
-          </div>
-          <div id="ctNote" class="muted small"></div>
-          <ul id="ctPositions" class="ct-positions"></ul>
-          <div class="ct-actions">
-            <button id="ctStop" class="ghost">Stop &amp; reset</button>
-            <span class="muted small">entry = 24h ago · marked live on real prices</span>
-          </div>
-        </div>
-      </div>
-    </aside>
+  <!-- lighthouse + islands -->
+  <main id="stage" class="absolute inset-0 flex items-center justify-center">
+    <div class="sky"><div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div></div>
+    <div class="whale wh1"></div><div class="whale wh2"></div>
+    <div class="lh-beam"></div>
+    <img id="lighthouseArt" src="assets/lighthouse.webp" alt="The Judge — the lighthouse"/>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full lighthouse-pulse z-0" style="background:rgba(242,202,80,.1)"></div>
+    <div id="islands" class="island-orbit absolute inset-0 flex items-center justify-center z-30"></div>
   </main>
 
-  <footer class="foot">
-    The alpha (signal params, per-pair research, live PnL) is withheld for IP reasons — what you
-    see is SMT's explainability + education surface on demo signals + real prices. Built for the
-    Google Gen AI Academy APAC, Cohort 2.
-    <a href="https://github.com/JannetEkka/smt-apac">Source</a> ·
-    <a href="https://smt-weex-trading-bot.jannet-ekka.workers.dev">Live SMT World ↗</a> ·
-    <a href="#" id="adminLink">Operator login</a>.
-  </footer>
+  <!-- focus backdrop + orbit forces -->
+  <div id="focusBackdrop" class="fixed inset-0 z-20 focus-backdrop opacity-0 pointer-events-none transition-opacity duration-500" onclick="exitFocus()"></div>
 
-  <script type="module" src="world.js?v=3"></script>
-  <script src="app.js?v=3"></script>
+  <!-- right-side detail panel (island + the 6 forces + the why) -->
+  <aside id="detail" class="detail hidden">
+    <button class="detail-x" onclick="exitFocus()">✕</button>
+    <div class="detail-hero">
+      <img id="dArt" class="detail-art" alt=""/>
+      <div><h2 id="dPair" class="font-display"></h2><div id="dVerdict" class="dverdict"></div></div>
+    </div>
+    <div class="detail-sub">The 6 personas I read</div>
+    <div id="dForces" class="detail-forces"></div>
+    <div class="detail-why"><span class="dwhy-ico">🗼</span><span id="dWhy"></span></div>
+  </aside>
+
+  <!-- bottom nav (active tab highlights gold) -->
+  <nav class="bottomnav">
+    <button id="navWorld" class="navitem active" onclick="goWorld()">
+      <span class="material-symbols-outlined">public</span><span class="navlbl">World</span></button>
+    <button id="navTutorial" class="navitem" onclick="openGate()">
+      <span class="material-symbols-outlined">school</span><span class="navlbl">Tutorial</span></button>
+    <button id="navAccount" class="navitem" onclick="openAccount()">
+      <span class="material-symbols-outlined">account_balance_wallet</span><span class="navlbl">Account</span></button>
+  </nav>
+
+  <!-- map-style legend: what each island means -->
+  <div id="legend" class="legend">
+    <button class="legend-head" onclick="document.getElementById('legend').classList.toggle('collapsed')">
+      <span>🗺️ WHAT THE ISLANDS MEAN</span><span id="legChev">▾</span></button>
+    <div class="legend-body">
+      <div class="leg-row long"><img class="leg-isle" src="assets/island_long.webp" alt="" draggable="false"/><span><b>LONG</b> — I'm buying</span></div>
+      <div class="leg-row short"><img class="leg-isle" src="assets/island_short.webp" alt="" draggable="false"/><span><b>SHORT</b> — I'm selling</span></div>
+      <div class="leg-row wait"><img class="leg-isle" src="assets/island_wait.webp" alt="" draggable="false"/><span><b>WAIT</b> — sitting out</span></div>
+      <div class="leg-row block"><img class="leg-isle" src="assets/island_block.webp" alt="" draggable="false"/><span><b>BLOCKED</b> 🔒</span></div>
+      <div class="leg-tip">Tap any island to see the 6 personas I read.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ GATE (the entrance — meet a beginner at the door) ═══ -->
+<div id="gate" class="hidden">
+  <svg class="guide" viewBox="0 0 100 122" fill="none" aria-hidden="true">
+    <ellipse cx="50" cy="118" rx="30" ry="4.5" fill="rgba(242,202,80,.22)"/>
+    <circle cx="50" cy="24" r="15" fill="#f2ca50"/>
+    <path d="M24 114 C24 82 36 66 50 66 C64 66 76 82 76 114 Z" fill="#f2ca50"/>
+  </svg>
+  <p class="gate-speech">Before you sail, let me make sure you're set. <b>Which sounds like you?</b></p>
+  <div class="gate-btns">
+    <button class="gate-btn" onclick="startTutor('crypto')"><b>I'm new to crypto</b><span>Start from the very beginning</span></button>
+    <button class="gate-btn" onclick="startTutor('trading')"><b>I'm new to trading</b><span>I get crypto, not the trading part</span></button>
+    <button class="gate-btn" onclick="startWalk()"><b>I know both already</b><span>Skip ahead — just show me the world</span></button>
+  </div>
+</div>
+
+<!-- ═══ TUTOR (the chat) ═══ -->
+<div id="tutor" class="hidden">
+  <div class="tutor-card">
+    <div class="tutor-head">
+      <span class="guide-mini">🧭</span>
+      <div><b id="tutorTitle">Crypto, from scratch</b><span class="muted">SMT · your guide</span></div>
+      <button class="tutor-x" onclick="backToWorld()">✕</button>
+    </div>
+    <div id="chatlog" class="chatlog"></div>
+    <div id="chips" class="chips"></div>
+    <div class="tutor-foot">
+      <input id="tutorInput" placeholder="Ask me anything…" autocomplete="off"/>
+      <button class="send" onclick="sendUser()">➤</button>
+      <button class="gotit" id="gotIt" onclick="nextLesson()">I've got it →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ WALKTHROUGH (guided world tour) ═══ -->
+<div id="walk" class="hidden">
+  <div id="spot" class="spot" style="opacity:0"></div>
+  <div id="coach" class="coach">
+    <div id="coachText" class="coach-text"></div>
+    <div class="coach-nav"><div id="coachDots" class="coach-dots"></div>
+      <button onclick="walkNext()" class="bg-primary text-on-primary font-mono text-xs uppercase tracking-wider px-4 py-2 rounded-full" style="background:linear-gradient(135deg,#ffe088,#d4af37);color:#3c2f00;border:none">Next →</button></div>
+  </div>
+</div>
+
+<!-- ═══ LOGIN / CONNECT EXCHANGE ═══ -->
+<div id="login" class="hidden">
+  <div class="login-card">
+    <button class="tutor-x" onclick="closeLogin()" style="position:absolute;top:14px;right:14px">✕</button>
+    <img src="smt_logo.png" alt="" class="login-logo" onerror="this.style.display='none'"/>
+    <h2 class="font-display">Welcome to SMT</h2>
+    <p class="muted">Log in to copy-trade SMT's calls into your own account.</p>
+    <button class="login-weex" onclick="doWeexConnect()">
+      <span class="material-symbols-outlined">link</span>
+      <span><b>Connect WEEX account</b><small>Copy-trade on your WEEX sandbox</small></span>
+    </button>
+    <div class="login-fields">
+      <input id="weexKey" placeholder="WEEX API key — demo, anything works"/>
+      <input id="weexSecret" type="password" placeholder="Secret — demo"/>
+    </div>
+    <div class="login-or"><span>or</span></div>
+    <button class="login-guest" onclick="enterGuest()">Continue as guest · paper account</button>
+    <p class="login-note muted">Demo/sandbox only — no real funds, no real orders. Balance &amp; PnL are simulated on <b>real prices</b>.</p>
+  </div>
+</div>
+
+<!-- ═══ ACCOUNT (copy-trade: balance + open positions + live PnL) ═══ -->
+<aside id="account" class="detail acct hidden">
+  <button class="detail-x" onclick="closeAccount()">✕</button>
+  <div class="acct-head">
+    <div class="acct-avatar" id="acctAvatar">🧭</div>
+    <div><h2 class="font-display" style="font-size:22px;margin:0">Your account</h2>
+      <div id="acctMode" class="acct-mode">Guest · paper</div></div>
+  </div>
+  <div class="acct-cards">
+    <div class="acct-card"><span class="muted small">Balance</span><div id="acctBal" class="acct-big">—</div></div>
+    <div class="acct-card"><span class="muted small">Equity</span><div id="acctEq" class="acct-big">—</div></div>
+    <div class="acct-card"><span class="muted small">Unrealized P&amp;L</span><div id="acctPnl" class="acct-big">—</div></div>
+  </div>
+  <div id="acctIntro" class="acct-intro">
+    <p class="muted">Copy SMT's current <b>LONG/SHORT</b> calls into open positions, marked live on <b>real prices</b>. <b>WAIT</b> calls are skipped — no forced trades.</p>
+    <button class="acct-copy" onclick="copySMT()">Copy SMT's calls</button>
+  </div>
+  <div class="acct-sub" id="acctPosHdr" style="display:none">Open positions</div>
+  <ul id="acctPositions" class="acct-positions"></ul>
+  <div id="acctActions" class="acct-actions" style="display:none">
+    <button class="acct-flat" onclick="flattenAll()">Flatten all</button>
+    <span class="muted small">entry = 24h ago · live on real prices</span>
+  </div>
+  <p id="acctNote" class="acct-note muted small">Simulated · demo signals · real prices — not financial advice.</p>
+</aside>
+
+<script src="app.js"></script>
 </body>
 </html>
