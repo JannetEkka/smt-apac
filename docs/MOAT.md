@@ -8,7 +8,7 @@ upfront about exactly what and why, because transparency is the whole point of S
   explanation, plus a forward **P(up) probability forecaster** that the JUDGE consults.
 - The **decision contract**: `action / conviction / risk / drivers / why / per-persona votes`.
 - The **education layer** (SMT → trading → crypto), the **chat**, the **3D world**, the
-  **user journey** (guest → onboard → watch live decisions → simulated copy-trade), the
+  **user journey** (guest → onboard → watch live decisions → exchange/wallet login + SMT's shadow account), the
   **acceleration benchmark**, and every line of GCP/NVIDIA deployment code.
 - The app runs end-to-end on **synthetic** persona votes (`brain/demo_brain.py`) in the **exact
   shape** the live brain emits.
