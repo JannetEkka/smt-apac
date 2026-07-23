@@ -26,7 +26,7 @@ flowchart LR
     P --> J["JUDGE<br/>quorum-renormalized<br/>votes + vetoes"]
     FC["Forward P(up|4h)<br/>forecaster (CPCV+DSR-gated)"] --> J
     J --> W["Faithful 'why'<br/>(flip-test verified)"]
-    W --> D["Decision card<br/>action · conviction · risk<br/>3D World UI + copy-trade"]
+    W --> D["Decision card<br/>action · conviction · risk<br/>ocean UI + shadow account"]
     D --> B["BigQuery<br/>sanitized view"]
     B --> A["Conversational Analytics<br/>+ notebook (AI_FORECAST)"]
     V["Re-learn loop: P(up) train + CPCV on NVIDIA GPU (2.1–6.5×)"] -.-> FC
