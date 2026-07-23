@@ -170,7 +170,7 @@ function openGate(){ exitFocus(); closeTutor(); document.getElementById("walk").
   blurWorld(true); document.getElementById("gate").classList.remove("hidden"); setNav("tutorial"); }
 function closeGate(){ document.getElementById("gate").classList.add("hidden"); }
 // leave any onboarding overlay and return to the live world (World tab goes gold)
-function backToWorld(){ closeGate(); closeTutor(); document.getElementById("walk").classList.add("hidden");
+function backToWorld(){ restoreDoge(); closeGate(); closeTutor(); document.getElementById("walk").classList.add("hidden");
   blurWorld(false); exitFocus(); setNav("world"); }
 function goWorld(){ backToWorld(); }   // bottom-nav "World" tab
 
@@ -334,11 +334,21 @@ function sendUser(){
 const WALK = [
   {text:"Welcome to my world. This whole ocean is the <b>live crypto market</b> — always moving."},
   {sel:"#lighthouseArt", center:true, r:110, text:"That lighthouse at the centre is <b>me — the Judge</b>. I weigh every signal and ring the verdict."},
-  {sel:"#isle-BTC", text:"Each island is a <b>coin</b>. Its look is my call: <b style='color:#52ddb4'>green &amp; rising</b> = buying, <b style='color:#ffb4ab'>red</b> = selling, dim = waiting."},
-  {sel:"#isle-DOGE", text:"A <b>locked</b> island means a safety rule forbids that trade — even a loud signal can't open it. 🔒"},
+  {sel:"#isle-BTC", text:"Each island is a <b>coin</b>, and its look is my call: a <b style='color:#52ddb4'>lush</b> island = I'm buying, a <b style='color:#ffb4ab'>rocky</b> one = selling, a <b>plain</b> one = waiting."},
+  {sel:"#isle-DOGE", action:"lockDoge", text:"A <b>frozen &amp; locked</b> island means a safety rule forbids that trade — even a loud signal can't open it. 🔒"},
   {action:"focusBTC", sel:"#isle-BTC", text:"Tap an island — say <b>BTC</b> here — and the panel on the right lights up with my <b>six personas</b>: each a reason, coloured by its vote (green = bullish, red = bearish, faded = quiet). The <b>gold</b> one carried the call, and you get the plain-English why."},
   {action:"exitFocus", text:"That's the whole idea — every call, every reason, in the open. It's a <b>simulated, risk-free</b> account. Go read the water. ⛵"},
 ];
+// Tutorial: force DOGE to render as the frozen/locked island while teaching that step,
+// then snap it back to the bot's real live call when the walkthrough ends/exits.
+let _dogeReal = null;
+function lockDogeForTutorial(){
+  if(DECISIONS.DOGE && DECISIONS.DOGE.action==="BLOCK") return;   // already locked in live data
+  _dogeReal = DECISIONS.DOGE;
+  DECISIONS.DOGE = {action:"BLOCK", conf:0, drivers:[], votes:{}, why:"Off the table — a safety rule (shown here to teach the locked island)."};
+  renderIslands();
+}
+function restoreDoge(){ if(_dogeReal){ DECISIONS.DOGE = _dogeReal; _dogeReal = null; renderIslands(); } }
 let walkIdx=-1;
 function startWalk(){ closeGate(); closeTutor(); blurWorld(false);
   document.getElementById("walk").classList.remove("hidden"); walkIdx=-1; walkNext(); }
@@ -351,6 +361,7 @@ function walkNext(){
     // (otherwise the spotlight overlay greys it out — issue: "side panel not focused")
     document.getElementById("detail")?.classList.add("walk-lit"); }
   if(step.action==="exitFocus") exitFocus();
+  if(step.action==="lockDoge") lockDogeForTutorial();
   document.getElementById("coachText").innerHTML = step.text;
   document.getElementById("coachDots").innerHTML = WALK.map((_,i)=>`<i class="${i===walkIdx?'on':''}"></i>`).join("");
   document.querySelector("#walk .coach-nav button").textContent = walkIdx===WALK.length-1 ? "Explore ⛵" : "Next →";
@@ -371,7 +382,7 @@ function positionCoach(step){
   let left = Math.min(Math.max(16, cx-cw/2), innerWidth-cw-16);
   coach.style.top=top+"px"; coach.style.left=left+"px";
 }
-function endWalk(){ document.getElementById("walk").classList.add("hidden"); blurWorld(false); exitFocus();
+function endWalk(){ restoreDoge(); document.getElementById("walk").classList.add("hidden"); blurWorld(false); exitFocus();
   setNav("world"); localStorage.setItem("smt_onboarded","1"); }
 addEventListener("resize", ()=>{ if(!document.getElementById("walk").classList.contains("hidden") && walkIdx>=0) positionCoach(WALK[walkIdx]); });
 
@@ -467,26 +478,24 @@ function initLighthouse(){
 })();
 
 // ══════════════════════════════════════════════════════════════════════════
-//  LOGIN / CONNECT + ACCOUNT (copy-trade) — smt-apac submission layer.
-//  Guest = paper account · WEEX connect = sandbox account (mock login, any input).
-//  Positions mirror SMT's live LONG/SHORT calls, marked live on REAL prices (/prices).
-//  All client-side (localStorage), no PII, no real orders.
+//  LOGIN + ACCOUNT — smt-apac submission layer.
+//  Exchange/wallet login = a WAITLIST (email). "Enter as admin" opens SMT's live
+//  account, running in SHADOW mode (no real orders): balance + SMT's current book,
+//  marked live on REAL prices (/prices). Read-only, no copy-trade. Client-side only.
 // ══════════════════════════════════════════════════════════════════════════
-const ACCT_KEY = "smt_account";
 const ACCT_START = 10000;
-const acct = () => { try{ return JSON.parse(localStorage.getItem(ACCT_KEY)); }catch{ return null; } };
-const saveAcct = a => localStorage.setItem(ACCT_KEY, JSON.stringify(a));
-function ensureAcct(mode){
-  let a = acct();
-  if(!a){ a = {mode: mode||"guest", balance: ACCT_START, positions: []}; saveAcct(a); }
-  else if(mode && a.mode !== mode){ a.mode = mode; saveAcct(a); }
-  return a;
-}
 function openLogin(){ document.getElementById("login").classList.remove("hidden"); }
 function closeLogin(){ document.getElementById("login").classList.add("hidden"); }
-function enterGuest(){ ensureAcct("guest"); closeLogin(); if(typeof enter==="function") enter(); }
-function doWeexConnect(){   // demo: any input connects (bogus password fine); nothing leaves the page
-  ensureAcct("weex"); closeLogin(); if(typeof enter==="function") enter();
+function enterGuest(){ closeLogin(); if(typeof enter==="function") enter(); }                 // world only
+function enterAdmin(){ closeLogin(); if(typeof enter==="function") enter(); setTimeout(openAccount, 1000); }
+function showWaitlist(){ document.getElementById("wlBox")?.classList.remove("hidden"); document.getElementById("wlEmail")?.focus(); }
+function joinWaitlist(){
+  const el = document.getElementById("wlEmail"), msg = document.getElementById("wlMsg");
+  const email = (el?.value||"").trim();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ if(msg) msg.textContent = "Enter a valid email."; return; }
+  // Client-side only for now — real capture + auto-mail needs a form backend (follow-up).
+  try{ const w = JSON.parse(localStorage.getItem("smt_waitlist")||"[]"); w.push({email, ts:Date.now()}); localStorage.setItem("smt_waitlist", JSON.stringify(w)); }catch(e){}
+  el.value=""; if(msg) msg.innerHTML = "You're on the list — we'll email you when exchange login opens. 🌊";
 }
 
 let _px=null, _pxT=0;
@@ -499,67 +508,41 @@ const fmtN = n => Number(n).toLocaleString(undefined,{maximumFractionDigits: n<1
 
 function openAccount(){
   exitFocus();
-  const a = ensureAcct();
   document.getElementById("account").classList.remove("hidden");
   document.getElementById("navWorld")?.classList.remove("active");
   document.getElementById("navTutorial")?.classList.remove("active");
   document.getElementById("navAccount")?.classList.add("active");
-  const weex = a.mode==="weex";
-  const modeEl = document.getElementById("acctMode");
-  modeEl.textContent = weex ? "WEEX · sandbox" : "Guest · paper";
-  modeEl.classList.toggle("paper", !weex);
-  document.getElementById("acctAvatar").textContent = weex ? "🟢" : "🧭";
   markAccount();
 }
 function closeAccount(){ document.getElementById("account").classList.add("hidden");
   document.getElementById("navAccount")?.classList.remove("active"); setNav("world"); }
 
-async function copySMT(){
-  const a = ensureAcct();
-  const active = PAIRS.filter(p => { const d=DECISIONS[p]; return d && (d.action==="LONG"||d.action==="SHORT"); });
-  if(!active.length){ bubbleAlert("SMT is WAITing on every pair right now — nothing to copy. That's a valid call. ⛵"); return; }
-  const px = await fetchPrices();
-  const notional = a.balance / active.length;
-  a.positions = active.map(p => {
-    const d = DECISIONS[p]; const pr = (px && px.pairs) ? px.pairs[p] : null;
-    const price = pr ? pr.price : null; const chg = pr ? pr.change24h : 0;
-    return { pair:p, side:d.action, notional, entry: price!=null ? price/(1+chg/100) : null };
-  });
-  saveAcct(a); markAccount();
-}
-function flattenAll(){ const a = ensureAcct(); a.positions = []; saveAcct(a); markAccount(); }
-
+// SMT's shadow book: its current LONG/SHORT calls ARE the open positions, marked on real
+// prices (entry ≈ 24h ago so P&L is meaningful). WAIT/BLOCK pairs aren't held. Read-only.
 async function markAccount(){
-  const a = acct(); if(!a) return;
-  const has = a.positions && a.positions.length;
-  document.getElementById("acctIntro").style.display = has ? "none" : "";
-  document.getElementById("acctPosHdr").style.display = has ? "" : "none";
-  document.getElementById("acctActions").style.display = has ? "flex" : "none";
+  if(!document.getElementById("account")) return;
   const px = await fetchPrices();
+  const active = PAIRS.filter(p => { const d=DECISIONS[p]; return d && (d.action==="LONG"||d.action==="SHORT"); });
+  const notional = active.length ? ACCT_START/active.length : 0;
   let uPnl = 0;
-  const rows = (a.positions||[]).map(p => {
-    const pr = (px && px.pairs) ? px.pairs[p.pair] : null;
-    const cur = pr ? pr.price : null;
+  const rows = active.map(p => {
+    const d = DECISIONS[p]; const pr = (px && px.pairs) ? px.pairs[p] : null;
+    const cur = pr ? pr.price : null; const chg = pr ? pr.change24h : 0;
+    const entry = cur!=null ? cur/(1+chg/100) : null;
     let pnl=0, pc=0;
-    if(cur!=null && p.entry){ const dir = p.side==="LONG"?1:-1; pc = dir*(cur-p.entry)/p.entry; pnl = p.notional*pc; }
+    if(cur!=null && entry){ const dir = d.action==="LONG"?1:-1; pc = dir*(cur-entry)/entry; pnl = notional*pc; }
     uPnl += pnl;
     const col = pnl>=0 ? "#73fad0" : "#ffb4ab";
-    return `<li><div class="acct-pp"><b>${p.pair}</b><span class="sd ${p.side.toLowerCase()}">${p.side}</span></div>
-      <span class="acct-px">${p.entry?fmtN(p.entry):"—"} → ${cur?fmtN(cur):"—"}</span>
+    return `<li><div class="acct-pp"><b>${p}</b><span class="sd ${d.action.toLowerCase()}">${d.action}</span></div>
+      <span class="acct-px">${entry?fmtN(entry):"—"} → ${cur?fmtN(cur):"—"}</span>
       <span class="acct-up" style="color:${col}">${(pc*100).toFixed(2)}%</span></li>`;
-  }).join("");
+  }).join("") || `<li class="muted small" style="border:none">SMT is on the sidelines right now — no open positions. Sitting out is a valid call. ⛵</li>`;
   document.getElementById("acctPositions").innerHTML = rows;
-  const equity = a.balance + uPnl;
-  const unit = a.mode==="weex" ? "SUSDT" : "units";
-  document.getElementById("acctBal").textContent = fmtN(a.balance)+" "+unit;
-  document.getElementById("acctEq").textContent = fmtN(equity)+" "+unit;
+  const equity = ACCT_START + uPnl;
+  document.getElementById("acctBal").textContent = fmtN(ACCT_START)+" SUSDT";
+  document.getElementById("acctEq").textContent = fmtN(equity)+" SUSDT";
   const pnlEl = document.getElementById("acctPnl");
-  pnlEl.textContent = (uPnl>=0?"+":"")+fmtN(uPnl)+" ("+((uPnl/a.balance)*100).toFixed(2)+"%)";
+  pnlEl.textContent = (uPnl>=0?"+":"")+fmtN(uPnl)+" ("+((uPnl/ACCT_START)*100).toFixed(2)+"%)";
   pnlEl.style.color = uPnl>=0 ? "#73fad0" : "#ffb4ab";
-  const note = document.getElementById("acctNote");
-  note.innerHTML = (px && px.live===false) ? "⚠ price feed offline — showing approx (PnL paused)."
-    : (a.mode==="weex" ? "WEEX sandbox · demo signals · <b>real prices</b> — not financial advice."
-                       : "Simulated paper · demo signals · <b>real prices</b> — not financial advice.");
 }
-function bubbleAlert(msg){ alert(msg); }
 setInterval(()=>{ const el=document.getElementById("account"); if(el && !el.classList.contains("hidden")) markAccount(); }, 20000);

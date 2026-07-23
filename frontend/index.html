@@ -306,6 +306,8 @@
   .login-guest{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);
     background:rgba(255,255,255,.04);color:#d1e4ff;cursor:pointer;font-size:13.5px;transition:.16s}
   .login-guest:hover{border-color:#f2ca50}
+  .login-go{width:100%;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-size:13px;
+    background:linear-gradient(135deg,#73fad0,#00b08a);color:#022}
   .login-note{margin-top:14px;font-size:11px;line-height:1.5}
 
   /* ── Account panel (reuses .detail positioning) ─────────────────── */
@@ -419,10 +421,10 @@
     <button class="legend-head" onclick="document.getElementById('legend').classList.toggle('collapsed')">
       <span>🗺️ WHAT THE ISLANDS MEAN</span><span id="legChev">▾</span></button>
     <div class="legend-body">
-      <div class="leg-row long"><img class="leg-isle" src="assets/island_long.webp" alt="" draggable="false"/><span><b>LONG</b> — I'm buying</span></div>
-      <div class="leg-row short"><img class="leg-isle" src="assets/island_short.webp" alt="" draggable="false"/><span><b>SHORT</b> — I'm selling</span></div>
-      <div class="leg-row wait"><img class="leg-isle" src="assets/island_wait.webp" alt="" draggable="false"/><span><b>WAIT</b> — sitting out</span></div>
-      <div class="leg-row block"><img class="leg-isle" src="assets/island_block.webp" alt="" draggable="false"/><span><b>BLOCKED</b> 🔒</span></div>
+      <div class="leg-row long"><img class="leg-isle" src="assets/island_long.webp" alt="" draggable="false"/><span><b>Lush</b> — I'm buying <i>(long)</i></span></div>
+      <div class="leg-row short"><img class="leg-isle" src="assets/island_short.webp" alt="" draggable="false"/><span><b>Rocky</b> — I'm selling <i>(short)</i></span></div>
+      <div class="leg-row wait"><img class="leg-isle" src="assets/island_wait.webp" alt="" draggable="false"/><span><b>Plain</b> — sitting out <i>(wait)</i></span></div>
+      <div class="leg-row block"><img class="leg-isle" src="assets/island_block.webp" alt="" draggable="false"/><span><b>Frozen</b> — locked 🔒</span></div>
       <div class="leg-tip">Tap any island to see the 6 personas I read.</div>
     </div>
   </div>
@@ -476,19 +478,20 @@
   <div class="login-card">
     <button class="tutor-x" onclick="closeLogin()" style="position:absolute;top:14px;right:14px">✕</button>
     <img src="smt_logo.png" alt="" class="login-logo" onerror="this.style.display='none'"/>
-    <h2 class="font-display">Welcome to SMT</h2>
-    <p class="muted">Log in to copy-trade SMT's calls into your own account.</p>
-    <button class="login-weex" onclick="doWeexConnect()">
+    <h2 class="font-display">Log in to SMT</h2>
+    <p class="muted">Connect an exchange or wallet to trade alongside SMT.</p>
+    <button class="login-weex" onclick="showWaitlist()">
       <span class="material-symbols-outlined">link</span>
-      <span><b>Connect WEEX account</b><small>Copy-trade on your WEEX sandbox</small></span>
+      <span><b>Log in with WEEX</b><small>Exchange &amp; wallet login — coming soon</small></span>
     </button>
-    <div class="login-fields">
-      <input id="weexKey" placeholder="WEEX API key — demo, anything works"/>
-      <input id="weexSecret" type="password" placeholder="Secret — demo"/>
+    <div id="wlBox" class="login-fields hidden">
+      <input id="wlEmail" type="email" placeholder="you@email.com — join the waitlist"/>
+      <button class="login-go" onclick="joinWaitlist()">Notify me when it opens</button>
+      <div id="wlMsg" class="muted small"></div>
     </div>
     <div class="login-or"><span>or</span></div>
-    <button class="login-guest" onclick="enterGuest()">Continue as guest · paper account</button>
-    <p class="login-note muted">Demo/sandbox only — no real funds, no real orders. Balance &amp; PnL are simulated on <b>real prices</b>.</p>
+    <button class="login-guest" onclick="enterAdmin()">Enter as admin (operator)</button>
+    <p class="login-note muted">Exchange login is on the way. Admin opens SMT's live account, running in <b>shadow mode</b> — SMT places no real orders.</p>
   </div>
 </div>
 
@@ -496,26 +499,18 @@
 <aside id="account" class="detail acct hidden">
   <button class="detail-x" onclick="closeAccount()">✕</button>
   <div class="acct-head">
-    <div class="acct-avatar" id="acctAvatar">🧭</div>
-    <div><h2 class="font-display" style="font-size:22px;margin:0">Your account</h2>
-      <div id="acctMode" class="acct-mode">Guest · paper</div></div>
+    <div class="acct-avatar" id="acctAvatar">🟢</div>
+    <div><h2 class="font-display" style="font-size:22px;margin:0">SMT's account</h2>
+      <div id="acctMode" class="acct-mode">SHADOW · admin</div></div>
   </div>
   <div class="acct-cards">
     <div class="acct-card"><span class="muted small">Balance</span><div id="acctBal" class="acct-big">—</div></div>
     <div class="acct-card"><span class="muted small">Equity</span><div id="acctEq" class="acct-big">—</div></div>
     <div class="acct-card"><span class="muted small">Unrealized P&amp;L</span><div id="acctPnl" class="acct-big">—</div></div>
   </div>
-  <div id="acctIntro" class="acct-intro">
-    <p class="muted">Copy SMT's current <b>LONG/SHORT</b> calls into open positions, marked live on <b>real prices</b>. <b>WAIT</b> calls are skipped — no forced trades.</p>
-    <button class="acct-copy" onclick="copySMT()">Copy SMT's calls</button>
-  </div>
-  <div class="acct-sub" id="acctPosHdr" style="display:none">Open positions</div>
+  <div class="acct-sub">Open positions · SMT's live book</div>
   <ul id="acctPositions" class="acct-positions"></ul>
-  <div id="acctActions" class="acct-actions" style="display:none">
-    <button class="acct-flat" onclick="flattenAll()">Flatten all</button>
-    <span class="muted small">entry = 24h ago · live on real prices</span>
-  </div>
-  <p id="acctNote" class="acct-note muted small">Simulated · demo signals · real prices — not financial advice.</p>
+  <p id="acctNote" class="acct-note muted small">Running in <b>SHADOW mode</b> — SMT places no real orders. Balance simulated (started 10,000), marked on <b>real prices</b>. WEEX sim account = tier <b>VIP 1</b> (fees differ by tier). WAIT/blocked pairs aren't held.</p>
 </aside>
 
 <script src="app.js"></script>
