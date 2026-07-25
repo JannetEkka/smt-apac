@@ -23,7 +23,7 @@ research, calibrated thresholds, live PnL) is **removed** and **demo data** show
 what you see is the *explainability + education* surface — the architecture, open and honest; the
 alpha, private ([`docs/MOAT.md`](docs/MOAT.md)). The north star: **Understand → Ask → Act** — a
 novice gets a decision *with the why* and a ladder that teaches, asks the data in plain English
-(BigQuery), and can opt into a simulated copy-trade with a path to their preferred exchange, each
+(BigQuery), and can follow SMT's live (shadow) book with a path to their preferred exchange, each
 persona exposed as a composable **MCP** tool.
 
 ## The decision, made legible
@@ -33,12 +33,14 @@ persona exposed as a composable **MCP** tool.
 - **The why** — plain English, with what the dissenters thought.
 
 ## The user journey (what a beginner actually does)
-**Guest → onboard → watch live decisions → simulated copy-trade.** A first-time visitor is met at
-the door ("new to crypto? to trading? or skip ahead"), watches SMT's calls update live in the 3D
-world, and can opt into a **paper copy-trade** — mirror SMT's calls into a paper portfolio marked on
-**real prices**, with a running (simulated) P&L, clearly labelled. It's a sandbox: the point is to
-learn the *why* before risking anything. The operator's admin login unlocks the real book behind the
-same UI (the moat boundary is the auth line — see [`docs/MOAT.md`](docs/MOAT.md)).
+**Guest → onboard → watch live decisions → follow along.** A first-time visitor is met at the door
+("new to crypto? to trading? or skip ahead"), learns from an AI tutor, and watches SMT's calls in the
+ocean world — each island's look *is* the call. To trade alongside SMT you **log in with your exchange
+or wallet** (WEEX — on a waitlist while the integration lands). The **admin** view opens SMT's own
+account, running in **shadow mode** (no real orders): its live book + balance, marked on **real
+prices**, clearly labelled — so you see exactly what SMT is doing. The full interactive trading flow
+(pick your pairs, size, margin/leverage, per-tier fees) is the next build. The moat boundary is the
+auth line — see [`docs/MOAT.md`](docs/MOAT.md).
 
 ## Under the hood (current, moat-safe)
 Beyond the six-persona JUDGE, the live brain runs a forward **`P(up|4h)` probability forecaster**
