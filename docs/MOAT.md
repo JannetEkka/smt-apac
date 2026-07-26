@@ -30,6 +30,11 @@ personas. The public guest sees the architecture and the explainability on real 
 per-pair calls and PnL sit behind the operator's admin login. **Judges see the architecture and the
 explainability; never the edge.**
 
+**Patent pending.** The three distinctives above — the counterfactually flip-tested explanation,
+the deterministic-decides / language-model-veto-only architecture, and the statistically gated
+self-retuning loop — are covered by a provisional patent application filed in India, July 2026.
+That is *why* the method internals stay private while the architecture stays open.
+
 This is standard practice and, we'd argue, the honest version of it: the multi-agent + judge pattern
 is well-known and *should* be open. The earned advantage — the tuned numbers and the research — is
 what stays ours.

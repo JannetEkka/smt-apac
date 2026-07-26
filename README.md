@@ -3,6 +3,10 @@
 > An explainable **decision-intelligence companion** that turns noisy crypto markets into a
 > plain-language, trustworthy decision — and teaches a total beginner *why*.
 
+> **Patent pending.** The flip-tested explanation method, the math-decides architecture, and the
+> outcome-gated self-retuning loop are covered by a provisional patent application filed in India,
+> July 2026.
+
 **▶ APAC submission (Cloud Run):** **https://smt-world-2gbcoyhuea-uc.a.run.app**
 — the deployed app judges evaluate: the 3D "brain", clickable per-pair decisions, the learn ladder, and chat.
 
