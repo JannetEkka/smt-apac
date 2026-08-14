@@ -24,7 +24,7 @@ from pydantic import BaseModel
 from brain import adapter, bq_log, prices as price_feed
 
 app = FastAPI(title="SMT World", version="0.1.0",
-              description="Explainable decision-intelligence companion — GCP APAC Cohort 2")
+              description="Explainable decision-intelligence companion")
 
 app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],

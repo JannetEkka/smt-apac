@@ -1,4 +1,4 @@
-"""MCP server exposing SMT's *sanitized* brain as tools (Track 2 reuse).
+"""MCP server exposing SMT's *sanitized* brain as tools.
 
 This is the moat boundary in protocol form: the agents reach SMT only through these tools,
 which return decisions / explanations / education context — never params, research, or PnL.

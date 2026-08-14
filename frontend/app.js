@@ -478,7 +478,7 @@ function initLighthouse(){
 })();
 
 // ══════════════════════════════════════════════════════════════════════════
-//  LOGIN + ACCOUNT — smt-apac submission layer.
+//  LOGIN + ACCOUNT — public app layer.
 //  Exchange/wallet login = a WAITLIST (email). "Enter as admin" opens SMT's live
 //  account, running in SHADOW mode (no real orders): balance + SMT's current book,
 //  marked live on REAL prices (/prices). Read-only, no copy-trade. Client-side only.

@@ -7,8 +7,8 @@
 > outcome-gated self-retuning loop are covered by a provisional patent application filed in India,
 > July 2026.
 
-**▶ APAC submission (Cloud Run):** **https://smt-world-2gbcoyhuea-uc.a.run.app**
-— the deployed app judges evaluate: the 3D "brain", clickable per-pair decisions, the learn ladder, and chat.
+**▶ Live app (Cloud Run):** **https://smt-world-2gbcoyhuea-uc.a.run.app**
+— the 3D "brain", clickable per-pair decisions, the learn ladder, and chat.
 
 **▶ Flagship UI (the full "ocean" experience):** **https://smt-weex-trading-bot.jannet-ekka.workers.dev**
 — 8 coins as islands whose look *is* the live call, the 6 personas read per island, the **JUDGE** as the
@@ -22,7 +22,7 @@ three-sentence explanation**, a risk score, and every persona's vote.
 ## What this is (and isn't)
 SMT is a **personal project I've built over the past year** — it began as a whale-behaviour
 classification model on Colab + BigQuery and grew into a multi-persona, agentic decision engine.
-For this hackathon it's **rebuilt as a public slice**: the moat (tuned signal params, per-pair
+It is published here as a **public slice**: the moat (tuned signal params, per-pair
 research, calibrated thresholds, live PnL) is **removed** and **demo data** shown in its place, so
 what you see is the *explainability + education* surface — the architecture, open and honest; the
 alpha, private ([`docs/MOAT.md`](docs/MOAT.md)). The north star: **Understand → Ask → Act** — a
@@ -66,7 +66,7 @@ Chat + education run on a curated corpus + Gemini. (An AlloyDB pgvector RAG path
 `agents/rag/` as a ready option but **disabled for cost** — Conversational Analytics covers the
 "ask the data" job cheaper.)
 
-**Why acceleration matters (the scored rubric line):** SMT re-learns from its own outcomes — it
+**Why acceleration matters:** SMT re-learns from its own outcomes — it
 trains a forward `P(up|4h)` model and validates with CPCV (combinatorial purged cross-validation)
 over long history. Measured on the **real lake** (446,976 kline rows + 163,554 archived decisions,
 8 pairs), XGBoost `P(up|4h)` runs **CPU 3.48s → CUDA 1.63s (2.1×)** train and **6.5×** inference on

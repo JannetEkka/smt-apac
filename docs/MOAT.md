@@ -19,7 +19,7 @@ upfront about exactly what and why, because transparency is the whole point of S
 | Signal-generation parameters (learned params) | This is the literal edge; publishing it removes it. |
 | Per-pair research (ground-truth charts) | Hand-built ground truth — the moat, not the architecture. |
 | Calibrated thresholds / HARD-BLOCK cells | Reconstructs the strategy if exposed. |
-| Live per-pair decisions + PnL | Competitive, and reserved for a continuous public track record we publish deliberately (patent-pending). Not needed to judge the *tool*. |
+| Live per-pair decisions + PnL | Competitive, and reserved for a continuous public track record we publish deliberately (patent-pending). Not needed to evaluate the *tool*. |
 
 ## How the boundary is enforced in code
 `brain/adapter.py` advertises `SOURCE = "demo"` and serves synthetic votes. The MCP server
@@ -27,7 +27,7 @@ upfront about exactly what and why, because transparency is the whole point of S
 no tool that exposes a parameter, a threshold, or PnL. In SMT's private deployment the same adapter
 flips to `SOURCE = "live"` **behind authentication**, serving the identical contract from the real
 personas. The public guest sees the architecture and the explainability on real prices; the real
-per-pair calls and PnL sit behind the operator's admin login. **Judges see the architecture and the
+per-pair calls and PnL sit behind the operator's admin login. **Readers see the architecture and the
 explainability; never the edge.**
 
 **Patent pending.** The three distinctives above — the counterfactually flip-tested explanation,

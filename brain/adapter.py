@@ -1,9 +1,9 @@
 """Brain boundary: prefer the REAL (private) SMT brain, fall back to the public DEMO brain.
 
-In the public submission deployment, the `smt` package is NOT vendored, so `SOURCE == "demo"`
+In the public deployment, the `smt` package is NOT vendored, so `SOURCE == "demo"`
 and the app runs entirely on synthetic votes (moat-safe). In SMT's private deployment, the real
 `smt` package is importable, `SOURCE == "live"`, and the SAME front-end contract is served from
-the live personas — judges see the architecture, never the edge. See docs/MOAT.md.
+the live personas — the architecture is visible, the edge is not. See docs/MOAT.md.
 """
 
 from __future__ import annotations
