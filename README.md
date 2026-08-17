@@ -15,7 +15,7 @@
 central lighthouse, plus a zero-knowledge tutorial. Same explainable brain, richer interface.
 
 Most market tools are black boxes: a signal, no reasoning, no way to learn or trust. **SMT World**
-is the opposite. Six specialist AI personas — order-flow, technical, on-chain/whale, sentiment,
+is the opposite. Six specialist AI personas — order-flow, technical, whale, on-chain, sentiment,
 market-regime — feed a **JUDGE** that issues one call (LONG / SHORT / WAIT) with a **faithful,
 three-sentence explanation**, a risk score, and every persona's vote.
 
@@ -76,6 +76,56 @@ overclaim; the win compounds with scale (1m klines = 12× rows, per-pair sweeps 
 dozens of refits). `accel/cudf_benchmark.py` is kept as an honest **scale projection** of that
 compounding. Faster re-learning → fresher decisions, lower time-to-insight.
 
+## Run it
+
+Python 3.10+. No Google Cloud account, credentials or API key needed for the local demo —
+the public repo ships the synthetic brain, so it runs offline end to end.
+
+```bash
+git clone https://github.com/JannetEkka/smt-apac.git
+cd smt-apac
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+make run                     # or: uvicorn api.main:app --reload --port 8080
+```
+
+Open <http://localhost:8080> for the ocean UI. Check it came up:
+
+```bash
+curl localhost:8080/healthz          # {"ok":true,"brain_source":"demo"}
+curl localhost:8080/decision/BTC     # action, conviction, all six votes, the faithful "why"
+```
+
+`brain_source` is the moat boundary: `demo` means synthetic votes, which is what this repo
+always serves. See [`docs/MOAT.md`](docs/MOAT.md).
+
+**Lighter install.** The API only needs three packages — the rest of `requirements.txt` is
+for the Cloud Run deployment (Vertex/ADK/MCP/BigQuery) and the GPU benchmark:
+
+```bash
+pip install fastapi "uvicorn[standard]" pydantic
+```
+
+**Endpoints.** `GET /healthz` · `GET /world` · `GET /decision/{pair}` ·
+`GET /education/{level}` (`smt|trading|crypto`) · `POST /chat`
+
+Chat and education call Gemini on Vertex AI when configured, and fall back to the curated
+corpus when not, so both work with no credentials. To wire the real models, copy
+`.env.example` to `.env` and set your project.
+
+**Deploy to Cloud Run.**
+
+```bash
+make deploy                  # gcloud builds submit --config deploy/cloudbuild.yaml
+```
+
+**GPU benchmark** (needs a RAPIDS/GPU environment — see [`accel/README.md`](accel/README.md)):
+
+```bash
+make bench                   # CPU baseline
+make bench-gpu               # NVIDIA GPU, zero code change
+```
+
 ## Map
 ```
 brain/      demo brain (synthetic) + live-brain adapter (the moat boundary)
@@ -87,3 +137,7 @@ notebooks/  sanitized BigQuery activity analysis (charts + AI_FORECAST)
 deploy/     Cloud Build · Cloud Run · Vertex GPU notebook
 docs/       ARCHITECTURE · MOAT
 ```
+
+## Licence
+
+Apache 2.0 — see [`LICENSE`](LICENSE).

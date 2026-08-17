@@ -31,7 +31,8 @@ per-pair calls and PnL sit behind the operator's admin login. **Readers see the 
 explainability; never the edge.**
 
 **Patent pending.** The three distinctives above — the counterfactually flip-tested explanation,
-the deterministic-decides / language-model-veto-only architecture, and the statistically gated
+the math-decides / language-model-veto-only architecture (the JUDGE's weights are learned
+from outcomes; the language model never casts the deciding vote), and the statistically gated
 self-retuning loop — are covered by a provisional patent application filed in India, July 2026.
 That is *why* the method internals stay private while the architecture stays open.
 
