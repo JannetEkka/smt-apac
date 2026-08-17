@@ -6,7 +6,7 @@ real SMT brain emits (the `dashboard_dict` contract: action / conf / why / drive
 but from deterministic *synthetic* persona votes — never the live, tuned personas, never a
 real threshold, never live PnL. Swap-in of the private brain happens in `brain/adapter.py`.
 
-The six personas mirror SMT's: order-flow, technical, on-chain/whale, sentiment, regime.
+The six personas mirror SMT's: order-flow, technical, whale, on-chain, sentiment, regime.
 """
 
 from __future__ import annotations

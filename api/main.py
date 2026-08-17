@@ -7,7 +7,7 @@ Endpoints (all public, read-only, moat-safe):
   GET  /education/{level}       — the Educator agent's progressive rung (smt|trading|crypto)
   POST /chat                    — chat-with-SMT (RAG-grounded; falls back to a canned reply)
 
-Deploy: see deploy/cloudrun-api.yaml. The chat/education routes call the ADK agents
+Deploy: see deploy/cloudbuild.yaml (`make deploy`). The chat/education routes call the ADK agents
 (agents/) when configured; otherwise they degrade gracefully so the demo never hard-fails.
 """
 
