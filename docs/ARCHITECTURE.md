@@ -41,11 +41,11 @@ flowchart LR
    (Vertex AI), graceful fallback to corpus when unconfigured.
 
 ## Academy-track reuse
-- **Track 1** (ADK): agent definitions in `agents/`, served on Cloud Run.
-- **Track 2** (MCP + BigQuery): `agents/mcp_server.py` exposes the sanitized brain as tools.
-- **Cohort 2** (BigQuery conversational analytics + BQML): the Conversational Analytics agent +
+- **Agents (ADK):** agent definitions in `agents/`, served on Cloud Run.
+- **Tools (MCP + BigQuery):** `agents/mcp_server.py` exposes the sanitized brain as tools.
+- **Analytics (BigQuery Conversational Analytics + BQML):** the Conversational Analytics agent +
   `AI_FORECAST` notebook over `public_activity`.
-- **Track 3** (AlloyDB pgvector RAG): included in `agents/rag/` as an optional path, disabled for
+- **Retrieval (AlloyDB pgvector RAG):** included in `agents/rag/` as an optional path, disabled for
   cost — Conversational Analytics covers the ask-the-data job.
 
 ## Moat boundary

@@ -1,6 +1,6 @@
 """Educator agent — the progressive SMT -> trading -> crypto teacher.
 
-Reuses the Track 1 pattern (ADK agent on Cloud Run). The agent grounds its answers in the
+An ADK agent on Cloud Run. It grounds its answers in the
 AlloyDB RAG corpus (agents/rag/) so it teaches from OUR material, not hallucination. When ADK
 / Vertex are not configured (e.g. local demo), `rung()` returns the curated lesson directly so
 the UI's "learn" ladder always works.
@@ -33,7 +33,7 @@ def rung(level: str) -> str:
 
 
 def build_agent():
-    """Construct the ADK agent (Track 1 style). Imported lazily so the demo runs without ADK."""
+    """Construct the ADK agent. Imported lazily so the demo runs without ADK."""
     from google.adk.agents import Agent          # google-adk
     from agents.rag.retrieve import retrieve
 

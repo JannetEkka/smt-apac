@@ -1,4 +1,4 @@
-"""RAG retrieval — vector search over the AlloyDB education corpus (Track 3 reuse).
+"""RAG retrieval — vector search over the AlloyDB education corpus.
 
 `retrieve(query, level)` embeds the query and returns the top-k nearest chunks via pgvector
 cosine distance. If AlloyDB / Vertex aren't configured (local demo), returns None so callers

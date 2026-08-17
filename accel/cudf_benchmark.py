@@ -1,4 +1,4 @@
-"""cuDF acceleration proof — the rubric's "evidence acceleration improves the experience".
+"""cuDF acceleration proof — evidence that acceleration improves the experience.
 
 SMT's learning stack validates strategies with CPCV (combinatorial purged cross-validation):
 many train/test splits over long OHLCV history, with rolling features recomputed per split.

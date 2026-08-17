@@ -1,6 +1,6 @@
 # looker/ — "what SMT is seeing" public panels (BigQuery + Looker Studio)
 
-A sanitized, embeddable dashboard so judges (and guests) can see SMT's decision *activity* without
+A sanitized, embeddable dashboard so anyone can see SMT's decision *activity* without
 any moat leakage. Two GCP components in one: **BigQuery** (store + query) and **Looker Studio**
 (free public embed).
 

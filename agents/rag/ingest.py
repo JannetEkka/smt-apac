@@ -1,4 +1,4 @@
-"""RAG ingestion — embed the education corpus into AlloyDB + pgvector (Track 3 reuse).
+"""RAG ingestion — embed the education corpus into AlloyDB + pgvector.
 
 Reads agents/rag/corpus/*.md, chunks them, embeds with Vertex AI text-embeddings, and upserts
 into an AlloyDB `education_chunks` table with a vector column. Run once to seed the knowledge base:

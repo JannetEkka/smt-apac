@@ -2,7 +2,7 @@
 #
 # PROJECT: this deploys to the ACTIVE gcloud project ($PROJECT_ID below). The live
 # `smt-world` Cloud Run service is in `smt-bot-2026-v2` (us-central1) — the ONE project
-# shared by the trading bot and this hack submission. Set it first, else you deploy to
+# shared by the trading bot and this public app. Set it first, else you deploy to
 # the wrong (empty) project:  gcloud config set project smt-bot-2026-v2
 #
 # Run:  gcloud builds submit --config deploy/cloudbuild.yaml --substitutions=_REGION=us-central1

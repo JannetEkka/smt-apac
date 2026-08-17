@@ -1,7 +1,7 @@
 """Chat-with-SMT agent — answers about SMT's current reads + general crypto/trading.
 
-Reuses Track 1 (ADK agent) + Track 2 (MCP tools: it reads SMT's *sanitized* brain via the
-MCP server in agents/mcp_server.py) + Track 3 (AlloyDB RAG for grounded education answers).
+An ADK agent that reads SMT's *sanitized* brain through the MCP server in
+agents/mcp_server.py, with an optional AlloyDB RAG path for grounded education answers.
 
 `answer()` degrades gracefully: if Vertex/ADK aren't configured, it still returns a useful,
 RAG-or-corpus-grounded reply so the public demo never hard-fails.

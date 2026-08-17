@@ -1,7 +1,7 @@
 [project]
 name = "smt-world"
 version = "0.1.0"
-description = "SMT World — explainable decision-intelligence companion (GCP APAC Cohort 2)"
+description = "SMT World — explainable decision-intelligence companion"
 requires-python = ">=3.10"
 
 [tool.setuptools]
