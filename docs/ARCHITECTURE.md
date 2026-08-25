@@ -23,14 +23,46 @@ flowchart TB
 ```mermaid
 flowchart LR
     F["Market feeds"] --> P["6 personas<br/>flow · technical · whale<br/>onchain · sentiment · regime"]
-    P --> J["JUDGE<br/>quorum-renormalized<br/>votes + vetoes"]
+    P --> T["Per-persona TRUST<br/>derived from measured<br/>discrimination, per pair"]
+    T --> J["JUDGE<br/>quorum-renormalized<br/>votes + vetoes"]
     FC["Forward P(up|4h)<br/>forecaster (CPCV+DSR-gated)"] --> J
-    J --> W["Faithful 'why'<br/>(flip-test verified)"]
+    J --> G["Reachability guard<br/>a learned floor that stops<br/>the book must fail LOUDLY"]
+    G --> W["Faithful 'why'<br/>(flip-test verified)"]
     W --> D["Decision card<br/>action · conviction · risk<br/>ocean UI + shadow account"]
     D --> B["BigQuery<br/>sanitized view"]
     B --> A["Conversational Analytics<br/>+ notebook (AI_FORECAST)"]
     V["Re-learn loop: P(up) train + CPCV on NVIDIA GPU (2.1–6.5×)"] -.-> FC
+    V -.-> T
 ```
+
+### Nothing static — how a threshold is chosen
+
+The rule the whole engine is built on: **a number that decides something is measured, not
+chosen.** Where a value genuinely cannot be derived it is registered, and a CI test fails
+if an unregistered one appears on the decision path. Three places this shows up, all
+shipped and all measured against an *independent* market archive rather than against the
+engine's own history:
+
+```mermaid
+flowchart TB
+    M["Independent market archive<br/>(never written by the engine)"] --> E1["EXITS<br/>target and stop derived per pair<br/>from that pair's own measured<br/>favourable / adverse excursion"]
+    M --> E2["TRUST<br/>each persona's weight from its<br/>measured ability to DISCRIMINATE,<br/>not from realised profit"]
+    M --> E3["SIZE<br/>equal risk per trade, so notional<br/>follows each pair's own stop<br/>and position size is per-pair"]
+    E1 --> FL["Fee floor<br/>the one gate the<br/>learner cannot disable"]
+    E2 --> FL
+    E3 --> FL
+```
+
+Two results worth stating because they shaped the design rather than merely confirming it:
+
+- **Grading the engine's own guesses can only ever measure the guesser.** Asking the
+  archive directly — the engine removed from the question — reversed a conclusion that ten
+  prior queries had agreed on. *Ask the market before concluding about the market.*
+- **Ranked year by year, per-pair VOLATILITY is stable and per-pair EDGE is not.** So
+  sizing is per-pair, but keyed on volatility, which holds out of sample, rather than on
+  edge, which reshuffles almost completely between years. That is the difference between a
+  per-pair number and a per-pair number that survives.
+
 
 ## Request flow
 1. **`/world`** → `brain/adapter.world()` → all-8-pairs decision snapshot → three.js nodes,
