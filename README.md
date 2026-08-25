@@ -50,8 +50,15 @@ auth line — see [`docs/MOAT.md`](docs/MOAT.md).
 Beyond the six-persona JUDGE, the live brain runs a forward **`P(up|4h)` probability forecaster**
 (gated on out-of-sample robustness — CPCV + a deflated-Sharpe test — so only models that survive a
 purged forward test ship), **quorum-renormalized** JUDGE conviction (a dead feed can't strand the
-call), and a **range-fade** behaviour inside held bands. Architecture is open; the tuned numbers are
-not.
+call), and a **range-fade** behaviour inside held bands.
+
+Since then the learning layer has grown in one direction — **replacing chosen numbers with
+measured ones**, graded against an independent market archive the engine never wrote:
+each persona's weight now comes from its measured ability to *discriminate* rather than
+from realised profit; exits are derived per pair from that pair's own measured price
+excursion; position size holds *risk* constant so the notional follows each pair's own
+stop; and a learned confidence floor that would silently stop the book now has to fail
+loudly instead. Architecture is open; the tuned numbers are not.
 
 ## Built on (GCP + NVIDIA)
 | Layer | Tech |
